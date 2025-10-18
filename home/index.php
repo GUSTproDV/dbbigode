@@ -22,7 +22,7 @@
         background: linear-gradient(120deg, #1a1a1a 60%, #8d6742 90%, #fffbe6 100%);
         min-height: 100vh;
         margin: 0;
-        font-family: 'Segoe UI', Arial, Helvetica, sans-serif;  
+        font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
     }
     .container-home {
         min-height: 100vh;
