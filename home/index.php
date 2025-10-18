@@ -15,7 +15,6 @@
     <a href="https://www.instagram.com/invictusbarbeariaoficiall/" target="_blank">
         <img src="../assets/instagram.png" alt="Instagram" class="instagram-logo">
     </a>
-   
 
 <style>
     body {
