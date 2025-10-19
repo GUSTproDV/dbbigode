@@ -15,6 +15,13 @@
     <a href="https://www.instagram.com/invictusbarbeariaoficiall/" target="_blank">
         <img src="../assets/instagram.png" alt="Instagram" class="instagram-logo">
     </a>
+    <br>    
+    <a href="https://www.google.com/maps/place/Av.+Brasil,+158+-+Centro,+Cianorte+-+PR,+87200-000/@-23.6611747,-52.6128445,17z/data=!3m1!4b1!4m6!3m5!1s0x94ed5a1bc0ab5b77:0x7b208c3cb1ad12a0!8m2!3d-23.6611747!4d-52.6102696!16s%2Fg%2F11sv5_jztc?entry=ttu&g_ep=EgoyMDI1MTAxNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="location-link">
+        <div class="location-container">
+            <img src="../assets/loc.png" alt="localizacao" class="loc">
+            <p>Av. Brasil, 158 - Centro - Cianorte/PR - Cep: 87702-100</p>
+        </div>
+    </a>
 
 <style>
     body {
@@ -30,6 +37,38 @@
         align-items: center;
         justify-content: center;
     }
+
+    .location-link {
+        text-decoration: none;
+        color: inherit;
+        transition: opacity 0.3s, transform 0.2s;
+    }
+
+    .location-link:hover {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+
+    .location-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 12px;
+        cursor: pointer;
+    }
+
+    .loc {
+        max-width: 35px;
+        margin: 0;
+        display: block;
+    }
+
+    p {
+        color: white;
+        margin: 0;
+    }
+
     .home-bg {
         background: rgba(26,26,26,0.98);
         border-radius: 24px;
