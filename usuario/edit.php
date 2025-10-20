@@ -72,8 +72,9 @@
             <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" class="form-control" required>
         </div>
         <div class="mb-2">
-            <label>Senha:</label>
-            <input type="password" id="senha" name="senha" class="form-control" minlength="6" required value="<?= htmlspecialchars($senha) ?>">
+            <label>Nova Senha:</label>
+            <input type="password" id="senha" name="senha" class="form-control" minlength="6" placeholder="Deixe vazio para manter a senha atual">
+            <small class="form-text text-muted">Deixe em branco se não quiser alterar a senha</small>
         </div>
         <div class="mb-2">
             <label>Status:</label>
