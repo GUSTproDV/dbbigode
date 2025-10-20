@@ -20,17 +20,20 @@
                 $sql = "SELECT * FROM usuario";
                 $result = $conn->query($sql);
                 while ($row = $result->fetch_assoc()){
-                    $sts = ($row['ativo']) ? 'ativo' : 'bloqueado';  
+                    $sts = ($row['ativo']) ? 'ativo' : 'bloqueado';
+                    $id_display = empty($row['id']) ? '[VAZIO - usando email]' : $row['id'];
+                    $identifier = empty($row['id']) ? $row['email'] : $row['id'];
                     echo "
                         <tr>
                             <td><span class='sts {$sts}'></span></td>
                             <td>{$row['nome']}</td>
                             <td>{$row['email']}</td>
                             <td>
-                                <a href='edit.php?id={$row['id']}' class='btn btn-info'>Editar</a>
-                                <a href='delete.php?id={$row['id']}' 
+                                <strong>ID: {$id_display}</strong><br>
+                                <a href='edit.php?identifier=" . urlencode($identifier) . "' class='btn btn-info' title='Editar: {$identifier}'>Editar</a>
+                                <a href='delete.php?identifier=" . urlencode($identifier) . "' 
                                 onclick='return confirm(\"Deseja excluir?\")'
-                                class='btn btn-danger'>Excluir</a>
+                                class='btn btn-danger' title='Excluir: {$identifier}'>Excluir</a>
                             </td>
                         </tr>
                     ";
