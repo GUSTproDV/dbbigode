@@ -46,6 +46,10 @@ foreach ($dias as &$dia) {
     $dia['horarios_disponiveis'] = array_filter($horarios, function($hora) use ($horarios_agendados) {
         return !in_array($hora, $horarios_agendados);
     });
+    
+    // Debug: adiciona informação sobre horários ocupados (pode remover depois)
+    $dia['horarios_ocupados'] = $horarios_agendados;
+    $dia['total_ocupados'] = count($horarios_agendados);
 }
 ?>
 
@@ -123,6 +127,17 @@ foreach ($dias as &$dia) {
         font-weight: bold;
     }
 
+    .sem-horarios {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 20px;
+        color: #999;
+        font-style: italic;
+        background: #f5f5f5;
+        border-radius: 8px;
+        border: 2px dashed #ddd;
+    }
+
     .ver-mais {
         display: block;
         margin-top: 10px;
@@ -190,18 +205,28 @@ foreach ($dias as &$dia) {
                         setlocale(LC_TIME, 'pt_BR.UTF-8');
                         $dataFormatada = strftime('%d de %B de %Y', strtotime($dia['data']));
                         echo "{$dia['label']}, {$dataFormatada}";
+                        
+                        // Mostra informação sobre disponibilidade
+                        $disponiveis = count($dia['horarios_disponiveis']);
+                        $ocupados = $dia['total_ocupados'];
+                        if ($ocupados > 0) {
+                            echo "<br><small style='color: #666;'>$disponiveis disponíveis | $ocupados ocupados</small>";
+                        }
                     ?>
                 </div>
                 <div class="horarios-grid" id="horarios-<?php echo $idx; ?>">
                     <?php
-                        // Exibe os primeiros 6 horários disponíveis
-                        $count = 0;
-                        foreach ($dia['horarios_disponiveis'] as $h) {
-                            if ($count < 6) {
-                                echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$h}</button>";
+                        if (count($dia['horarios_disponiveis']) == 0) {
+                            echo "<div class='sem-horarios'>Nenhum horário disponível</div>";
+                        } else {
+                            // Exibe os primeiros 6 horários disponíveis
+                            $count = 0;
+                            foreach ($dia['horarios_disponiveis'] as $h) {
+                                if ($count < 6) {
+                                    echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$h}</button>";
+                                }
+                                $count++;
                             }
-                            $count++;
-                        }
                     ?>
                     <div class="extra-horarios">
                         <?php
@@ -214,8 +239,11 @@ foreach ($dias as &$dia) {
                             }
                         ?>
                     </div>
+                    <?php } ?>
                 </div>
-                <a href="#" class="ver-mais" data-target="horarios-<?php echo $idx; ?>">VER MAIS</a>
+                <?php if (count($dia['horarios_disponiveis']) > 6): ?>
+                    <a href="#" class="ver-mais" data-target="horarios-<?php echo $idx; ?>">VER MAIS</a>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
     </div>
@@ -249,9 +277,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("INSERT INTO horarios (nome, corte, data, hora) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $nome, $corte, $data, $hora);
         if ($stmt->execute()) {
-            echo "<div style='color:green;text-align:center;'>Agendamento realizado com sucesso!</div>";
+            echo "<div class='alert alert-success' style='text-align:center; max-width:400px; margin:20px auto;'>
+                    Agendamento realizado com sucesso! Redirecionando...
+                  </div>";
+            echo "<script>
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                  </script>";
         } else {
-            echo "<div style='color:red;text-align:center;'>Erro ao agendar!</div>";
+            echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
+                    Erro ao agendar: " . htmlspecialchars($stmt->error) . "
+                  </div>";
         }
         $stmt->close();
     } else {
