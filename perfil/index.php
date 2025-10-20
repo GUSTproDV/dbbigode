@@ -20,6 +20,148 @@ $result = $stmt->get_result();
 $usuario = $result->fetch_assoc();
 $stmt->close();
 
+// Processamento do formulário de atualização de perfil
+$mensagem = '';
+$tipo_mensagem = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_perfil'])) {
+    $novo_nome = trim($_POST['nome']);
+    $novo_email = trim($_POST['email']);
+    $senha_atual = $_POST['senha_atual'];
+    $nova_senha = $_POST['nova_senha'];
+    $confirmar_senha = $_POST['confirmar_senha'];
+    $email_original = $_POST['email_original'];
+    
+    // Processamento da foto de perfil
+    $nova_foto = null;
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $foto_tmp = $_FILES['foto']['tmp_name'];
+        $foto_nome = $_FILES['foto']['name'];
+        $foto_size = $_FILES['foto']['size'];
+        $foto_type = $_FILES['foto']['type'];
+        
+        // Validar tipo de arquivo
+        $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($foto_type, $tipos_permitidos)) {
+            $mensagem = 'Formato de imagem não permitido. Use JPEG, PNG, GIF ou WebP.';
+            $tipo_mensagem = 'danger';
+        }
+        // Validar tamanho (max 5MB)
+        elseif ($foto_size > 5 * 1024 * 1024) {
+            $mensagem = 'Imagem muito grande. Máximo 5MB.';
+            $tipo_mensagem = 'danger';
+        }
+        else {
+            // Gerar nome único para a foto
+            $extensao = pathinfo($foto_nome, PATHINFO_EXTENSION);
+            $nova_foto = 'perfil_' . $usuario['id'] . '_' . time() . '.' . $extensao;
+            $destino = '../uploads/perfil/' . $nova_foto;
+            
+            // Upload da foto
+            if (!move_uploaded_file($foto_tmp, $destino)) {
+                $mensagem = 'Erro ao fazer upload da foto.';
+                $tipo_mensagem = 'danger';
+                $nova_foto = null;
+            }
+        }
+    }
+
+    // Validações
+    if (empty($novo_nome) || empty($novo_email)) {
+        $mensagem = 'Nome e email são obrigatórios.';
+        $tipo_mensagem = 'danger';
+    } elseif (!filter_var($novo_email, FILTER_VALIDATE_EMAIL)) {
+        $mensagem = 'Email inválido.';
+        $tipo_mensagem = 'danger';
+    } elseif (empty($senha_atual)) {
+        $mensagem = 'Senha atual é obrigatória para confirmar as alterações.';
+        $tipo_mensagem = 'danger';
+    } elseif (md5($senha_atual) !== $usuario['senha']) {
+        $mensagem = 'Senha atual incorreta.';
+        $tipo_mensagem = 'danger';
+    } elseif (!empty($nova_senha) && strlen($nova_senha) < 6) {
+        $mensagem = 'Nova senha deve ter pelo menos 6 caracteres.';
+        $tipo_mensagem = 'danger';
+    } elseif (!empty($nova_senha) && $nova_senha !== $confirmar_senha) {
+        $mensagem = 'Nova senha e confirmação não coincidem.';
+        $tipo_mensagem = 'danger';
+    } else {
+        // Verifica se o email já existe (se foi alterado)
+        if ($novo_email !== $email_original) {
+            $sql_check = "SELECT id FROM usuario WHERE email = ? AND email != ?";
+            $stmt_check = $conn->prepare($sql_check);
+            $stmt_check->bind_param("ss", $novo_email, $email_original);
+            $stmt_check->execute();
+            $result_check = $stmt_check->get_result();
+            
+            if ($result_check->num_rows > 0) {
+                $mensagem = 'Este email já está sendo usado por outro usuário.';
+                $tipo_mensagem = 'danger';
+                $stmt_check->close();
+            } else {
+                $stmt_check->close();
+                // Prossegue com a atualização
+                $atualizar_perfil = true;
+            }
+        } else {
+            $atualizar_perfil = true;
+        }
+        
+        if (isset($atualizar_perfil)) {
+            // Remove foto antiga se houver uma nova
+            if ($nova_foto && !empty($usuario['foto'])) {
+                $foto_antiga = '../uploads/perfil/' . $usuario['foto'];
+                if (file_exists($foto_antiga)) {
+                    unlink($foto_antiga);
+                }
+            }
+            
+            // Monta a query de atualização
+            if (!empty($nova_senha) && $nova_foto) {
+                $senha_hash = md5($nova_senha);
+                $sql_update = "UPDATE usuario SET nome = ?, email = ?, senha = ?, foto = ? WHERE email = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("sssss", $novo_nome, $novo_email, $senha_hash, $nova_foto, $email_original);
+            } elseif (!empty($nova_senha)) {
+                $senha_hash = md5($nova_senha);
+                $sql_update = "UPDATE usuario SET nome = ?, email = ?, senha = ? WHERE email = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("ssss", $novo_nome, $novo_email, $senha_hash, $email_original);
+            } elseif ($nova_foto) {
+                $sql_update = "UPDATE usuario SET nome = ?, email = ?, foto = ? WHERE email = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("ssss", $novo_nome, $novo_email, $nova_foto, $email_original);
+            } else {
+                $sql_update = "UPDATE usuario SET nome = ?, email = ? WHERE email = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("sss", $novo_nome, $novo_email, $email_original);
+            }
+            
+            if ($stmt_update->execute()) {
+                // Atualiza a sessão com o novo nome
+                $_SESSION['NOME_USUARIO'] = $novo_nome;
+                
+                $mensagem = 'Perfil atualizado com sucesso!';
+                $tipo_mensagem = 'success';
+                
+                // Recarrega os dados do usuário
+                $sql = "SELECT * FROM usuario WHERE email = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("s", $novo_email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $usuario = $result->fetch_assoc();
+                $stmt->close();
+                
+            } else {
+                $mensagem = 'Erro ao atualizar perfil: ' . $stmt_update->error;
+                $tipo_mensagem = 'danger';
+            }
+            $stmt_update->close();
+        }
+    }
+}
+
 // Busca os agendamentos do usuário
 $sql_agendamentos = "SELECT * FROM horarios WHERE nome = ? ORDER BY data DESC, hora DESC";
 $stmt_agendamentos = $conn->prepare($sql_agendamentos);
@@ -38,10 +180,34 @@ $result_agendamentos = $stmt_agendamentos->get_result();
         </div>
     </div>
 
+    <?php if (!empty($mensagem)): ?>
+        <div class="alert alert-<?= $tipo_mensagem ?> alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($mensagem) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
+        </div>
+    <?php endif; ?>
+
     <div class="perfil-content">
         <div class="dados-pessoais">
-            <h3>Dados Pessoais</h3>
-            <div class="info-grid">
+            <div class="dados-header">
+                <h3>Dados Pessoais</h3>
+                <button id="btn-editar-perfil" class="btn-editar-perfil">
+                    <i class="edit-icon">✏️</i> Editar Perfil
+                </button>
+            </div>
+            
+            <!-- Foto de Perfil -->
+            <div class="foto-perfil-container">
+                <?php if (!empty($usuario['foto']) && file_exists('../uploads/perfil/' . $usuario['foto'])): ?>
+                    <img src="../uploads/perfil/<?= htmlspecialchars($usuario['foto']) ?>" alt="Foto de Perfil" class="foto-perfil">
+                <?php else: ?>
+                    <div class="foto-perfil-placeholder">
+                        <i class="user-icon">👤</i>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <div class="info-grid" id="info-display">
                 <div class="info-item">
                     <label>Nome:</label>
                     <span><?= htmlspecialchars($usuario['nome']) ?></span>
@@ -57,6 +223,40 @@ $result_agendamentos = $stmt_agendamentos->get_result();
                     </span>
                 </div>
             </div>
+            
+            <!-- Formulário de edição (inicialmente oculto) -->
+            <form id="form-editar-perfil" class="form-editar-perfil" method="POST" enctype="multipart/form-data" style="display: none;">
+                <div class="form-group">
+                    <label for="foto">Foto de Perfil:</label>
+                    <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
+                    <small class="text-muted">Formatos aceitos: JPEG, PNG, GIF, WebP. Máximo: 5MB</small>
+                </div>
+                <div class="form-group">
+                    <label for="nome">Nome:</label>
+                    <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($usuario['nome']) ?>" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" value="<?= htmlspecialchars($usuario['email']) ?>" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="senha_atual">Senha Atual:</label>
+                    <input type="password" id="senha_atual" name="senha_atual" class="form-control" placeholder="Digite sua senha atual">
+                </div>
+                <div class="form-group">
+                    <label for="nova_senha">Nova Senha:</label>
+                    <input type="password" id="nova_senha" name="nova_senha" class="form-control" placeholder="Digite nova senha (deixe vazio para manter)">
+                </div>
+                <div class="form-group">
+                    <label for="confirmar_senha">Confirmar Nova Senha:</label>
+                    <input type="password" id="confirmar_senha" name="confirmar_senha" class="form-control" placeholder="Confirme a nova senha">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" name="atualizar_perfil" class="btn btn-primary">Salvar Alterações</button>
+                    <button type="button" id="btn-cancelar-edicao" class="btn btn-secondary">Cancelar</button>
+                </div>
+                <input type="hidden" name="email_original" value="<?= htmlspecialchars($usuario['email']) ?>">
+            </form>
         </div>
 
         <div class="agendamentos-section">
@@ -155,6 +355,39 @@ $result_agendamentos = $stmt_agendamentos->get_result();
         margin-bottom: 20px;
         border-bottom: 2px solid #8d6742;
         padding-bottom: 10px;
+    }
+
+    /* Foto de Perfil */
+    .foto-perfil-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+    }
+
+    .foto-perfil {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #8d6742;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .foto-perfil-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid #8d6742;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .foto-perfil-placeholder .user-icon {
+        font-size: 48px;
+        color: #8d6742;
     }
 
     .info-grid {
@@ -323,7 +556,204 @@ $result_agendamentos = $stmt_agendamentos->get_result();
             grid-template-columns: 1fr;
         }
     }
+
+    /* Estilos para edição de perfil */
+    .dados-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .btn-editar-perfil {
+        background: #8d6742;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.3s;
+    }
+
+    .btn-editar-perfil:hover {
+        background: #6b4f2e;
+    }
+
+    .form-editar-perfil {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px solid #8d6742;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #8d6742;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(141, 103, 66, 0.2);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        position: relative;
+    }
+
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+    .btn-close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    @media (max-width: 768px) {
+        .dados-header {
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnEditarPerfil = document.getElementById('btn-editar-perfil');
+    const formEditarPerfil = document.getElementById('form-editar-perfil');
+    const infoDisplay = document.getElementById('info-display');
+    const btnCancelarEdicao = document.getElementById('btn-cancelar-edicao');
+    
+    // Botão para mostrar formulário de edição
+    btnEditarPerfil.addEventListener('click', function() {
+        infoDisplay.style.display = 'none';
+        formEditarPerfil.style.display = 'block';
+        btnEditarPerfil.style.display = 'none';
+    });
+    
+    // Botão para cancelar edição
+    btnCancelarEdicao.addEventListener('click', function() {
+        formEditarPerfil.style.display = 'none';
+        infoDisplay.style.display = 'grid';
+        btnEditarPerfil.style.display = 'flex';
+        
+        // Reset do formulário
+        formEditarPerfil.reset();
+        
+        // Restaura valores originais
+        document.getElementById('nome').value = '<?= htmlspecialchars($usuario['nome']) ?>';
+        document.getElementById('email').value = '<?= htmlspecialchars($usuario['email']) ?>';
+    });
+    
+    // Validação de confirmação de senha
+    const novaSenha = document.getElementById('nova_senha');
+    const confirmarSenha = document.getElementById('confirmar_senha');
+    
+    confirmarSenha.addEventListener('input', function() {
+        if (novaSenha.value && confirmarSenha.value) {
+            if (novaSenha.value !== confirmarSenha.value) {
+                confirmarSenha.setCustomValidity('As senhas não coincidem');
+            } else {
+                confirmarSenha.setCustomValidity('');
+            }
+        }
+    });
+    
+    // Validação do formulário
+    formEditarPerfil.addEventListener('submit', function(e) {
+        const senhaAtual = document.getElementById('senha_atual').value;
+        const novaSenhaVal = novaSenha.value;
+        const confirmarSenhaVal = confirmarSenha.value;
+        
+        if (!senhaAtual) {
+            e.preventDefault();
+            alert('Senha atual é obrigatória para confirmar as alterações.');
+            return;
+        }
+        
+        if (novaSenhaVal && novaSenhaVal.length < 6) {
+            e.preventDefault();
+            alert('Nova senha deve ter pelo menos 6 caracteres.');
+            return;
+        }
+        
+        if (novaSenhaVal && novaSenhaVal !== confirmarSenhaVal) {
+            e.preventDefault();
+            alert('Nova senha e confirmação não coincidem.');
+            return;
+        }
+    });
+    
+    // Auto-fechar alertas
+    const alertas = document.querySelectorAll('.alert');
+    alertas.forEach(function(alerta) {
+        const btnClose = alerta.querySelector('.btn-close');
+        if (btnClose) {
+            btnClose.addEventListener('click', function() {
+                alerta.style.display = 'none';
+            });
+        }
+        
+        // Auto-fechar após 5 segundos
+        setTimeout(function() {
+            alerta.style.opacity = '0';
+            setTimeout(function() {
+                alerta.style.display = 'none';
+            }, 300);
+        }, 5000);
+    });
+});
+</script>
 
 <?php 
 $stmt_agendamentos->close();

@@ -10,6 +10,42 @@ if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
 include '../include/header.php';
 include '../config/db.php';
 
+// PROCESSAMENTO DO AGENDAMENTO PRIMEIRO (antes de gerar a lista)
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    echo "<!-- DEBUG: Recebeu POST -->";
+    echo "<!-- DEBUG POST DATA: " . json_encode($_POST) . " -->";
+    
+    $nome = isset($_SESSION['NOME_USUARIO']) ? $_SESSION['NOME_USUARIO'] : '';
+    $corte = $_POST['corte'] ?? '';
+    $data = $_POST['data'] ?? '';
+    $hora = $_POST['hora'] ?? '';
+    
+    echo "<!-- DEBUG VALORES: nome=$nome, corte=$corte, data=$data, hora=$hora -->";
+
+    if ($nome && $data && $hora) {
+        // Formatação da hora para incluir segundos se necessário
+        $hora_formatted = strlen($hora) === 5 ? $hora . ':00' : $hora;
+        
+        // Debug do agendamento
+        echo "<!-- DEBUG AGENDAMENTO: Nome=$nome, Data=$data, Hora=$hora (formatada: $hora_formatted), Corte=$corte -->";
+        
+        $stmt = $conn->prepare("INSERT INTO horarios (nome, corte, data, hora) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $nome, $corte, $data, $hora_formatted);
+        if ($stmt->execute()) {
+            echo "<div class='alert alert-success' style='text-align:center; max-width:400px; margin:20px auto;'>
+                    Agendamento realizado com sucesso!
+                  </div>";
+        } else {
+            echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
+                    Erro ao agendar: " . htmlspecialchars($stmt->error) . "
+                  </div>";
+        }
+        $stmt->close();
+    } else {
+        echo "<div style='color:red;text-align:center;'>Erro: Dados incompletos para agendamento!</div>";
+    }
+}
+
 // Pega o corte agendado da URL, se existir
 $corte_agendado = isset($_GET['servico']) ? $_GET['servico'] : '';
 
@@ -19,6 +55,7 @@ for ($i = 0; $i < 7; $i++) {
     $data = date('Y-m-d', strtotime("+$i days"));
     $label = strftime('%A', strtotime($data)); // Nome do dia da semana
     $dias[] = ['label' => ucfirst($label), 'data' => $data];
+    echo "<!-- DEBUG: Dia gerado: $data ($label) -->";
 }   
 
 // Array de horários disponíveis
@@ -28,9 +65,29 @@ $horarios = [
     '16:00', '16:30', '17:00', '17:30', '18:00'
 ];
 
+// Debug: verificar se há dados na tabela horarios
+$debug_sql = "SELECT COUNT(*) as total FROM horarios";
+$debug_result = $conn->query($debug_sql);
+$debug_row = $debug_result->fetch_assoc();
+echo "<!-- DEBUG: Total de agendamentos na tabela: " . $debug_row['total'] . " -->";
+
 // Filtra os horários disponíveis para cada dia
 foreach ($dias as &$dia) {
     $data = $dia['data'];
+    echo "<!-- DEBUG: Verificando data: $data -->";
+    
+    // Primeira consulta: ver todos os horários desta data
+    $sql_debug = "SELECT * FROM horarios WHERE data = ?";
+    $stmt_debug = $conn->prepare($sql_debug);
+    $stmt_debug->bind_param("s", $data);
+    $stmt_debug->execute();
+    $result_debug = $stmt_debug->get_result();
+    echo "<!-- DEBUG: Encontrados " . $result_debug->num_rows . " agendamentos para $data -->";
+    while ($row_debug = $result_debug->fetch_assoc()) {
+        echo "<!-- DEBUG: Agendamento encontrado - Nome: {$row_debug['nome']}, Hora: {$row_debug['hora']}, Corte: " . ($row_debug['corte'] ?? 'N/A') . " -->";
+    }
+    $stmt_debug->close();
+    
     $sql = "SELECT hora FROM horarios WHERE data = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $data);
@@ -44,12 +101,20 @@ foreach ($dias as &$dia) {
 
     // Remove os horários agendados do array de horários disponíveis
     $dia['horarios_disponiveis'] = array_filter($horarios, function($hora) use ($horarios_agendados) {
-        return !in_array($hora, $horarios_agendados);
+        // Compara no formato HH:MM:SS (adiciona :00 se necessário)
+        $hora_formatted = strlen($hora) === 5 ? $hora . ':00' : $hora;
+        return !in_array($hora_formatted, $horarios_agendados);
     });
     
     // Debug: adiciona informação sobre horários ocupados (pode remover depois)
     $dia['horarios_ocupados'] = $horarios_agendados;
     $dia['total_ocupados'] = count($horarios_agendados);
+    
+    // Debug mais detalhado
+    echo "<!-- DEBUG para {$data}: -->";
+    echo "<!-- Horários ocupados no banco: " . implode(', ', $horarios_agendados) . " -->";
+    echo "<!-- Horários disponíveis após filtro: " . implode(', ', $dia['horarios_disponiveis']) . " -->";
+    echo "<!-- Total disponíveis: " . count($dia['horarios_disponiveis']) . " -->";
 }
 ?>
 
@@ -98,7 +163,7 @@ foreach ($dias as &$dia) {
 
     .horarios-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 10px;
         justify-content: center;
         transition: max-height 0.3s ease-in-out;
@@ -181,17 +246,82 @@ foreach ($dias as &$dia) {
     }
 
     .extra-horarios {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        justify-content: center;
         max-height: 0;
         visibility: hidden;
         opacity: 0;
         overflow: hidden;
         transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        margin-top: 10px;
     }
 
     .extra-horarios.show {
         max-height: 500px; /* Ajuste conforme necessário */
         visibility: visible;
         opacity: 1;
+    }
+
+    /* Formulário flutuante */
+    .formulario-flutuante {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+        width: 320px;
+        max-width: 90vw;
+        z-index: 1000;
+        border: 2px solid #8d6742;
+        transition: all 0.3s ease;
+    }
+
+
+
+    .formulario-flutuante form {
+        margin: 0;
+    }
+
+    .formulario-flutuante .form-control {
+        font-size: 14px;
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+
+    .formulario-flutuante .btn {
+        padding: 10px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .formulario-flutuante label {
+        font-size: 14px;
+        color: #8d6742;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* Adiciona espaço no final da página para não cobrir conteúdo */
+    .container-agendamento {
+        padding-bottom: 200px;
+    }
+
+    /* Responsivo para telas menores */
+    @media (max-width: 768px) {
+        .formulario-flutuante {
+            bottom: 10px;
+            right: 10px;
+            left: 10px;
+            width: auto;
+        }
+        
+        .container-agendamento {
+            padding-bottom: 250px;
+        }
     }
 </style>
 
@@ -227,9 +357,12 @@ foreach ($dias as &$dia) {
                                 }
                                 $count++;
                             }
+                        }
                     ?>
-                    <div class="extra-horarios">
-                        <?php
+                </div>
+                <div class="extra-horarios" id="extra-horarios-<?php echo $idx; ?>">
+                    <?php
+                        if (count($dia['horarios_disponiveis']) > 6) {
                             $count = 0;
                             foreach ($dia['horarios_disponiveis'] as $h) {
                                 if ($count >= 6) {
@@ -237,9 +370,8 @@ foreach ($dias as &$dia) {
                                 }
                                 $count++;
                             }
-                        ?>
-                    </div>
-                    <?php } ?>
+                        }
+                    ?>
                 </div>
                 <?php if (count($dia['horarios_disponiveis']) > 6): ?>
                     <a href="#" class="ver-mais" data-target="horarios-<?php echo $idx; ?>">VER MAIS</a>
@@ -249,52 +381,24 @@ foreach ($dias as &$dia) {
     </div>
 </div>
 
-<!-- Formulário de agendamento -->
-<form id="form-agendar" method="post" style="max-width:400px;margin:30px auto;">
-    <?php if ($corte_agendado): ?>
-        <div class="form-group mb-2">
-            <label><strong>Corte escolhido:</strong></label>
-            <input type="text" name="corte" value="<?php echo htmlspecialchars($corte_agendado); ?>" readonly class="form-control">
-        </div>
-    <?php endif; ?>
-    <input type="text" name="nome" value="<?php echo isset($_SESSION['NOME_USUARIO']) ? htmlspecialchars($_SESSION['NOME_USUARIO']) : ''; ?>" readonly class="form-control mb-2" style="background-color: #f8f9fa; color: #6c757d;">
-    <input type="hidden" name="data" id="input-data">
-    <input type="hidden" name="hora" id="input-hora">
-    <button type="submit" class="btn btn-success w-100">Agendar</button>
-</form>
+<!-- Formulário de agendamento flutuante -->
+<div class="formulario-flutuante" id="formulario-flutuante">
+    <form id="form-agendar" method="post">
+        <?php if ($corte_agendado): ?>
+            <div class="form-group mb-2">
+                <label><strong>Corte escolhido:</strong></label>
+                <input type="text" name="corte" value="<?php echo htmlspecialchars($corte_agendado); ?>" readonly class="form-control">
+            </div>
+        <?php endif; ?>
+        <input type="text" name="nome" value="<?php echo isset($_SESSION['NOME_USUARIO']) ? htmlspecialchars($_SESSION['NOME_USUARIO']) : ''; ?>" readonly class="form-control mb-2" style="background-color: #f8f9fa; color: #6c757d;">
+        <input type="hidden" name="data" id="input-data">
+        <input type="hidden" name="hora" id="input-hora">
+        <button type="submit" class="btn btn-success w-100">Agendar</button>
+    </form>
+</div>
 
 <?php
 include '../include/footer.php';
-
-// Se o formulário foi enviado, salva no banco
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = isset($_SESSION['NOME_USUARIO']) ? $_SESSION['NOME_USUARIO'] : ''; // Usa o nome da sessão
-    $corte = $_POST['corte'] ?? '';
-    $data = $_POST['data'] ?? '';
-    $hora = $_POST['hora'] ?? '';
-
-    if ($nome && $data && $hora) {
-        $stmt = $conn->prepare("INSERT INTO horarios (nome, corte, data, hora) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $nome, $corte, $data, $hora);
-        if ($stmt->execute()) {
-            echo "<div class='alert alert-success' style='text-align:center; max-width:400px; margin:20px auto;'>
-                    Agendamento realizado com sucesso! Redirecionando...
-                  </div>";
-            echo "<script>
-                    setTimeout(function() {
-                        window.location.reload();
-                    }, 2000);
-                  </script>";
-        } else {
-            echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
-                    Erro ao agendar: " . htmlspecialchars($stmt->error) . "
-                  </div>";
-        }
-        $stmt->close();
-    } else {
-        echo "<div style='color:red;text-align:center;'>Erro: Dados incompletos para agendamento!</div>";
-    }
-}
 ?>
 
 <script>
@@ -320,7 +424,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Obtém o alvo do botão
             const targetId = btn.getAttribute('data-target');
-            const extraHorarios = document.querySelector(`#${targetId} .extra-horarios`);
+            const idx = targetId.replace('horarios-', '');
+            const extraHorarios = document.querySelector(`#extra-horarios-${idx}`);
 
             // Alterna a exibição dos horários adicionais
             if (extraHorarios) {
