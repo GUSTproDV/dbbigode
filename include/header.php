@@ -35,7 +35,7 @@
         </li>
         <li class="nav-item1 d-flex align-items-center">
           <?php if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true): ?>
-            <span class="nav-link me-2">Bem-vindo, <?= htmlspecialchars($_SESSION['NOME_USUARIO'] ?? 'Usuário') ?></span>
+            <a href="../perfil/index.php" class="nav-link me-2 welcome-link">Bem-vindo, <?= htmlspecialchars($_SESSION['NOME_USUARIO'] ?? 'Usuário') ?></a>
             <a href="../logout.php" class="nav-link">Sair</a>
           <?php else: ?>
             <a href="../index.php" class="nav-link">Login</a>
@@ -60,6 +60,17 @@
   .nav-item1 {
     position: absolute;
     right: 10px;
+  }
+  
+  .welcome-link {
+    color: #ffd700 !important; /* Cor dourada para destacar */
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .welcome-link:hover {
+    color: #ffed4e !important; /* Cor mais clara no hover */
+    text-decoration: none;
   }
   
 </style>

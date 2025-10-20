@@ -229,7 +229,7 @@ foreach ($dias as &$dia) {
             <input type="text" name="corte" value="<?php echo htmlspecialchars($corte_agendado); ?>" readonly class="form-control">
         </div>
     <?php endif; ?>
-    <input type="text" name="nome" placeholder="Seu nome" required class="form-control mb-2">
+    <input type="text" name="nome" value="<?php echo isset($_SESSION['NOME_USUARIO']) ? htmlspecialchars($_SESSION['NOME_USUARIO']) : ''; ?>" readonly class="form-control mb-2" style="background-color: #f8f9fa; color: #6c757d;">
     <input type="hidden" name="data" id="input-data">
     <input type="hidden" name="hora" id="input-hora">
     <button type="submit" class="btn btn-success w-100">Agendar</button>
@@ -240,7 +240,7 @@ include '../include/footer.php';
 
 // Se o formulário foi enviado, salva no banco
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = $_POST['nome'] ?? '';
+    $nome = isset($_SESSION['NOME_USUARIO']) ? $_SESSION['NOME_USUARIO'] : ''; // Usa o nome da sessão
     $corte = $_POST['corte'] ?? '';
     $data = $_POST['data'] ?? '';
     $hora = $_POST['hora'] ?? '';
@@ -254,6 +254,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo "<div style='color:red;text-align:center;'>Erro ao agendar!</div>";
         }
         $stmt->close();
+    } else {
+        echo "<div style='color:red;text-align:center;'>Erro: Dados incompletos para agendamento!</div>";
     }
 }
 ?>
