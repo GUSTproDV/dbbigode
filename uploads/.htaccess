@@ -1,0 +1,16 @@
+# Permite acesso às imagens
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Allow from all
+</FilesMatch>
+
+# Bloqueia arquivos PHP por segurança
+<Files "*.php">
+    Deny from all
+</Files>
+
+# Headers para imagens
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>

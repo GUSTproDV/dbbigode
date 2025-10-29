@@ -9,11 +9,6 @@
         $nome = trim($_POST['nome']);
         $email = trim($_POST['email']);
         $ativo = $_POST['ativo'] ?? 1;
-        
-        // Debug temporário
-        echo "<!-- DEBUG: identifier = " . htmlspecialchars($identifier ?? 'NULL') . " -->";
-        echo "<!-- DEBUG: original_email = " . htmlspecialchars($original_email ?? 'NULL') . " -->";
-        echo "<!-- DEBUG: senha vazia = " . (empty($_POST['senha']) ? 'SIM' : 'NÃO') . " -->";
 
         // Validações básicas
         if(empty($nome) || empty($email)){
@@ -33,21 +28,17 @@
             $search_field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'id';
             $search_value = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? $original_email : $identifier;
             
-            echo "<!-- DEBUG: search_field = $search_field, search_value = " . htmlspecialchars($search_value) . " -->";
-            
             if(!empty($_POST['senha']) && trim($_POST['senha']) !== ''){
                 // Atualiza com nova senha
                 $senha = md5(trim($_POST['senha']));
                 $sql = "UPDATE usuario SET nome = ?, email = ?, senha = ?, ativo = ? WHERE $search_field = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("sssis", $nome, $email, $senha, $ativo, $search_value);
-                echo "<!-- DEBUG: Atualizando COM nova senha -->";
             } else {
                 // Atualiza sem alterar a senha
                 $sql = "UPDATE usuario SET nome = ?, email = ?, ativo = ? WHERE $search_field = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssis", $nome, $email, $ativo, $search_value);
-                echo "<!-- DEBUG: Atualizando SEM alterar senha -->";
             }
         } else {
             // Inserção

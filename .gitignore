@@ -1,0 +1,41 @@
+# Arquivos de configuração local
+config/db_local.php
+
+# Arquivos de upload (manter estrutura, ignorar conteúdo)
+uploads/perfil/*.jpg
+uploads/perfil/*.jpeg
+uploads/perfil/*.png
+uploads/perfil/*.gif
+!uploads/perfil/.gitkeep
+
+# Logs
+*.log
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos do editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Vendor (se usar Composer)
+vendor/
+
+# Arquivos de cache
+cache/
+tmp/
+temp/
+
+# Arquivos de configuração específicos do ambiente
+.env
+.env.local
+.env.production

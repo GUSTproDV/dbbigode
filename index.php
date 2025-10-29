@@ -24,21 +24,29 @@
                         $msg = 'Usuário bloqueado, entre em contato com o adm.';
                     } else {
                         $msg_class = 'alert-success';
-                        $msg = 'Login efetuado com sucesso.';
                         session_start();
                         $_SESSION['LOGADO'] = TRUE;
-                        $_SESSION['NOME_USUARIO'] = $row['nome']; // Define o nome do usuário na sessão
-
-                        // Redireciona para a página salva na sessão
-                        if (isset($_SESSION['redirect_after_login'])) {
-                            $redirect = $_SESSION['redirect_after_login'];
-                            unset($_SESSION['redirect_after_login']); // Remove a variável da sessão
-                            header('Location: ' . $redirect);
+                        $_SESSION['NOME_USUARIO'] = $row['nome'];
+                        $_SESSION['usuario_logado'] = $row['email']; // Para verificações de admin
+                        $_SESSION['TIPO_USUARIO'] = $row['tipo_usuario'] ?? 'cliente';
+                        
+                        // Verifica se é admin e redireciona apropriadamente
+                        if (($_SESSION['TIPO_USUARIO'] ?? 'cliente') === 'admin') {
+                            $msg = 'Login administrativo efetuado com sucesso.';
+                            header('Location: ./admin/index.php');
                             exit;
                         } else {
-                            // Caso não haja página salva, redireciona para a home
-                            header('Location: ./home/index.php');
-                            exit;
+                            $msg = 'Login efetuado com sucesso.';
+                            // Redireciona para a página salva na sessão
+                            if (isset($_SESSION['redirect_after_login'])) {
+                                $redirect = $_SESSION['redirect_after_login'];
+                                unset($_SESSION['redirect_after_login']);
+                                header('Location: ' . $redirect);
+                                exit;
+                            } else {
+                                header('Location: ./home/index.php');
+                                exit;
+                            }
                         }
                     }
                 }

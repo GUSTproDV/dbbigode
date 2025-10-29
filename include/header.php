@@ -41,11 +41,16 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
         <!-- <li class="nav-item">
           <a href="../pessoa" class="nav-link">Pessoas</a>
         </li> -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a href="../usuario" class="nav-link">Usuarios</a>
-        </li>
+        </li> -->
         <li class="nav-item1 d-flex align-items-center">
           <?php if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true): ?>
+            <?php if (isset($_SESSION['TIPO_USUARIO']) && $_SESSION['TIPO_USUARIO'] === 'admin'): ?>
+              <a href="../admin/index.php" class="nav-link me-3 admin-link">
+                <span class="admin-badge">👑 Admin</span>
+              </a>
+            <?php endif; ?>
             <a href="../perfil/index.php" class="nav-link me-2 welcome-link d-flex align-items-center">
               <?php if (!empty($foto_usuario) && file_exists(dirname(__FILE__) . '/../uploads/perfil/' . $foto_usuario)): ?>
                 <img src="../uploads/perfil/<?= htmlspecialchars($foto_usuario) ?>" alt="Foto de Perfil" class="foto-perfil-header me-2">
@@ -116,6 +121,27 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
   .user-icon-small {
     font-size: 16px;
     color: #ffd700;
+  }
+  
+  /* Botão Admin */
+  .admin-link {
+    color: #ff6b6b !important;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 15px;
+    padding: 5px 10px !important;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .admin-link:hover {
+    background: rgba(255, 107, 107, 0.2) !important;
+    color: #ff5252 !important;
+    transform: scale(1.05);
+  }
+  
+  .admin-badge {
+    font-size: 12px;
+    font-weight: bold;
   }
   
 </style>

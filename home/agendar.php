@@ -9,40 +9,43 @@ if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
 
 include '../include/header.php';
 include '../config/db.php';
+include '../include/horarios_helper.php';
 
-// PROCESSAMENTO DO AGENDAMENTO PRIMEIRO (antes de gerar a lista)
+// Processamento do agendamento
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    echo "<!-- DEBUG: Recebeu POST -->";
-    echo "<!-- DEBUG POST DATA: " . json_encode($_POST) . " -->";
-    
     $nome = isset($_SESSION['NOME_USUARIO']) ? $_SESSION['NOME_USUARIO'] : '';
     $corte = $_POST['corte'] ?? '';
     $data = $_POST['data'] ?? '';
     $hora = $_POST['hora'] ?? '';
-    
-    echo "<!-- DEBUG VALORES: nome=$nome, corte=$corte, data=$data, hora=$hora -->";
 
     if ($nome && $data && $hora) {
         // Formatação da hora para incluir segundos se necessário
         $hora_formatted = strlen($hora) === 5 ? $hora . ':00' : $hora;
         
-        // Debug do agendamento
-        echo "<!-- DEBUG AGENDAMENTO: Nome=$nome, Data=$data, Hora=$hora (formatada: $hora_formatted), Corte=$corte -->";
-        
-        $stmt = $conn->prepare("INSERT INTO horarios (nome, corte, data, hora) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $nome, $corte, $data, $hora_formatted);
-        if ($stmt->execute()) {
-            echo "<div class='alert alert-success' style='text-align:center; max-width:400px; margin:20px auto;'>
-                    Agendamento realizado com sucesso!
+        // Verificar se o horário está disponível (validação extra de segurança)
+        if (!isHorarioDisponivel($data, $hora, $conn)) {
+            echo "<div class='alert alert-warning' style='text-align:center; max-width:400px; margin:20px auto;'>
+                    Este horário não está mais disponível. Tente outro horário.
                   </div>";
         } else {
-            echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
-                    Erro ao agendar: " . htmlspecialchars($stmt->error) . "
-                  </div>";
+            $stmt = $conn->prepare("INSERT INTO horarios (nome, corte, data, hora) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $nome, $corte, $data, $hora_formatted);
+            if ($stmt->execute()) {
+                echo "<div class='alert alert-success' style='text-align:center; max-width:400px; margin:20px auto;'>
+                        ✅ Agendamento realizado com sucesso!<br>
+                        <small>Data: " . date('d/m/Y', strtotime($data)) . " às " . date('H:i', strtotime($hora)) . "</small>
+                      </div>";
+            } else {
+                echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
+                        Erro ao agendar: " . htmlspecialchars($stmt->error) . "
+                      </div>";
+            }
+            $stmt->close();
         }
-        $stmt->close();
     } else {
-        echo "<div style='color:red;text-align:center;'>Erro: Dados incompletos para agendamento!</div>";
+        echo "<div class='alert alert-danger' style='text-align:center; max-width:400px; margin:20px auto;'>
+                Erro: Dados incompletos para agendamento!
+              </div>";
     }
 }
 
@@ -50,71 +53,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $corte_agendado = isset($_GET['servico']) ? $_GET['servico'] : '';
 
 // Gera os próximos 7 dias a partir da data atual
+setlocale(LC_TIME, 'portuguese', 'Portuguese_Brazil', 'ptb');
 $dias = [];
 for ($i = 0; $i < 7; $i++) {
     $data = date('Y-m-d', strtotime("+$i days"));
     $label = strftime('%A', strtotime($data)); // Nome do dia da semana
     $dias[] = ['label' => ucfirst($label), 'data' => $data];
-    echo "<!-- DEBUG: Dia gerado: $data ($label) -->";
-}   
+}
 
-// Array de horários disponíveis
-$horarios = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30', '18:00'
-];
 
-// Debug: verificar se há dados na tabela horarios
-$debug_sql = "SELECT COUNT(*) as total FROM horarios";
-$debug_result = $conn->query($debug_sql);
-$debug_row = $debug_result->fetch_assoc();
-echo "<!-- DEBUG: Total de agendamentos na tabela: " . $debug_row['total'] . " -->";
 
-// Filtra os horários disponíveis para cada dia
+// Filtra os horários disponíveis para cada dia usando configuração do admin
 foreach ($dias as &$dia) {
     $data = $dia['data'];
-    echo "<!-- DEBUG: Verificando data: $data -->";
     
-    // Primeira consulta: ver todos os horários desta data
-    $sql_debug = "SELECT * FROM horarios WHERE data = ?";
-    $stmt_debug = $conn->prepare($sql_debug);
-    $stmt_debug->bind_param("s", $data);
-    $stmt_debug->execute();
-    $result_debug = $stmt_debug->get_result();
-    echo "<!-- DEBUG: Encontrados " . $result_debug->num_rows . " agendamentos para $data -->";
-    while ($row_debug = $result_debug->fetch_assoc()) {
-        echo "<!-- DEBUG: Agendamento encontrado - Nome: {$row_debug['nome']}, Hora: {$row_debug['hora']}, Corte: " . ($row_debug['corte'] ?? 'N/A') . " -->";
+    // Verificar se a barbearia está aberta neste dia
+    $status_dia = getStatusDia($data, $conn);
+    
+    if (!$status_dia || !$status_dia['aberto']) {
+        // Dia fechado
+        $dia['horarios_disponiveis'] = [];
+        $dia['total_ocupados'] = 0;
+        $dia['status'] = 'fechado';
+        $dia['motivo'] = $status_dia ? 'Fechado conforme configuração' : 'Dia não configurado';
+        continue;
     }
-    $stmt_debug->close();
     
-    $sql = "SELECT hora FROM horarios WHERE data = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $data);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $horarios_agendados = [];
-    while ($row = $result->fetch_assoc()) {
-        $horarios_agendados[] = $row['hora'];
-    }
-    $stmt->close();
-
-    // Remove os horários agendados do array de horários disponíveis
-    $dia['horarios_disponiveis'] = array_filter($horarios, function($hora) use ($horarios_agendados) {
-        // Compara no formato HH:MM:SS (adiciona :00 se necessário)
-        $hora_formatted = strlen($hora) === 5 ? $hora . ':00' : $hora;
-        return !in_array($hora_formatted, $horarios_agendados);
-    });
+    // Buscar horários disponíveis baseados na configuração
+    $horarios_livres = getHorariosLivres($data, $conn);
+    $horarios_agendados = getAgendamentosData($data, $conn);
     
-    // Debug: adiciona informação sobre horários ocupados (pode remover depois)
-    $dia['horarios_ocupados'] = $horarios_agendados;
+    $dia['horarios_disponiveis'] = $horarios_livres;
     $dia['total_ocupados'] = count($horarios_agendados);
-    
-    // Debug mais detalhado
-    echo "<!-- DEBUG para {$data}: -->";
-    echo "<!-- Horários ocupados no banco: " . implode(', ', $horarios_agendados) . " -->";
-    echo "<!-- Horários disponíveis após filtro: " . implode(', ', $dia['horarios_disponiveis']) . " -->";
-    echo "<!-- Total disponíveis: " . count($dia['horarios_disponiveis']) . " -->";
+    $dia['status'] = 'aberto';
+    $dia['horario_funcionamento'] = [
+        'abertura' => formatarHorario($status_dia['hora_abertura']),
+        'fechamento' => formatarHorario($status_dia['hora_fechamento']),
+        'pausa_inicio' => $status_dia['hora_pausa_inicio'] ? formatarHorario($status_dia['hora_pausa_inicio']) : null,
+        'pausa_fim' => $status_dia['hora_pausa_fim'] ? formatarHorario($status_dia['hora_pausa_fim']) : null
+    ];
 }
 ?>
 
@@ -141,9 +118,16 @@ foreach ($dias as &$dia) {
     }
 
     .dias-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+    }
+    
+    .dia-card {
+        flex: 1 1 calc(14.28% - 15px); /* 100% / 7 cards = 14.28% */
+        min-width: 180px;
+        max-width: 200px;
     }
 
     .dia-card {
@@ -336,24 +320,43 @@ foreach ($dias as &$dia) {
                         $dataFormatada = strftime('%d de %B de %Y', strtotime($dia['data']));
                         echo "{$dia['label']}, {$dataFormatada}";
                         
-                        // Mostra informação sobre disponibilidade
-                        $disponiveis = count($dia['horarios_disponiveis']);
-                        $ocupados = $dia['total_ocupados'];
-                        if ($ocupados > 0) {
-                            echo "<br><small style='color: #666;'>$disponiveis disponíveis | $ocupados ocupados</small>";
+                        // Mostra informação sobre disponibilidade e funcionamento
+                        if (isset($dia['status']) && $dia['status'] === 'fechado') {
+                            echo "<br><small style='color: #dc3545;'>🚫 Fechado</small>";
+                        } else {
+                            $disponiveis = count($dia['horarios_disponiveis']);
+                            $ocupados = $dia['total_ocupados'];
+                            $funcionamento = $dia['horario_funcionamento'];
+                            
+                            echo "<br><small style='color: #666;'>⏰ {$funcionamento['abertura']} às {$funcionamento['fechamento']}";
+                            if ($funcionamento['pausa_inicio']) {
+                                echo " (pausa {$funcionamento['pausa_inicio']}-{$funcionamento['pausa_fim']})";
+                            }
+                            echo "</small>";
+                            
+                            if ($ocupados > 0 || $disponiveis > 0) {
+                                echo "<br><small style='color: #28a745;'>$disponiveis livres";
+                                if ($ocupados > 0) {
+                                    echo " | $ocupados ocupados";
+                                }
+                                echo "</small>";
+                            }
                         }
                     ?>
                 </div>
                 <div class="horarios-grid" id="horarios-<?php echo $idx; ?>">
                     <?php
-                        if (count($dia['horarios_disponiveis']) == 0) {
-                            echo "<div class='sem-horarios'>Nenhum horário disponível</div>";
+                        if (isset($dia['status']) && $dia['status'] === 'fechado') {
+                            echo "<div class='sem-horarios'>🚫 Fechado<br><small style='font-size: 0.8em; color: #999;'>{$dia['motivo']}</small></div>";
+                        } elseif (count($dia['horarios_disponiveis']) == 0) {
+                            echo "<div class='sem-horarios'>😔 Lotado<br><small style='font-size: 0.8em; color: #999;'>Todos os horários ocupados</small></div>";
                         } else {
                             // Exibe os primeiros 6 horários disponíveis
                             $count = 0;
                             foreach ($dia['horarios_disponiveis'] as $h) {
                                 if ($count < 6) {
-                                    echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$h}</button>";
+                                    $hora_formatada = date('H:i', strtotime($h));
+                                    echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$hora_formatada}</button>";
                                 }
                                 $count++;
                             }
@@ -442,10 +445,5 @@ include '../include/footer.php';
 </script>
 
 <?php
-// Adicionando log para depuração
-error_log('Sessão LOGADO: ' . (isset($_SESSION['LOGADO']) ? $_SESSION['LOGADO'] : 'não definida'));
-error_log('URL salva para redirecionamento: ' . $_SERVER['REQUEST_URI']);
 
-// Log temporário para verificar a URL salva na sessão
-error_log('Redirect URL saved: ' . $_SERVER['REQUEST_URI']);
 ?>

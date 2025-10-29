@@ -52,14 +52,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_perfil'])) 
             $tipo_mensagem = 'danger';
         }
         else {
-            // Gerar nome único para a foto
+            // Criar pasta se não existir
+            $pasta_destino = '../uploads/perfil/';
+            if (!is_dir($pasta_destino)) {
+                mkdir($pasta_destino, 0755, true);
+            }
+            
+            // Gerar nome único para a foto (usar email como fallback se ID estiver vazio)
             $extensao = pathinfo($foto_nome, PATHINFO_EXTENSION);
-            $nova_foto = 'perfil_' . $usuario['id'] . '_' . time() . '.' . $extensao;
-            $destino = '../uploads/perfil/' . $nova_foto;
+            $id_usuario = !empty($usuario['id']) ? $usuario['id'] : md5($usuario['email']);
+            $nova_foto = 'perfil_' . $id_usuario . '_' . time() . '.' . $extensao;
+            $destino = $pasta_destino . $nova_foto;
             
             // Upload da foto
-            if (!move_uploaded_file($foto_tmp, $destino)) {
-                $mensagem = 'Erro ao fazer upload da foto.';
+            if (move_uploaded_file($foto_tmp, $destino)) {
+                $mensagem = 'Foto enviada com sucesso!';
+                $tipo_mensagem = 'success';
+            } else {
+                $mensagem = 'Erro ao fazer upload da foto. Verifique as permissões da pasta uploads.';
                 $tipo_mensagem = 'danger';
                 $nova_foto = null;
             }
@@ -203,6 +213,9 @@ $result_agendamentos = $stmt_agendamentos->get_result();
                 <?php else: ?>
                     <div class="foto-perfil-placeholder">
                         <i class="user-icon">👤</i>
+                        <?php if (!empty($usuario['foto'])): ?>
+                            <small style="font-size: 10px; color: #999;">Foto não encontrada: <?= htmlspecialchars($usuario['foto']) ?></small>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>

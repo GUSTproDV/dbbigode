@@ -57,6 +57,36 @@ INSERT INTO `horarios` (`id`, `nome`, `corte`, `data`, `hora`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `horarios_funcionamento`
+--
+
+CREATE TABLE `horarios_funcionamento` (
+  `id` int(11) NOT NULL,
+  `dia_semana` int(1) NOT NULL COMMENT '1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado, 7=Domingo',
+  `nome_dia` varchar(20) NOT NULL,
+  `aberto` tinyint(1) NOT NULL DEFAULT 1 COMMENT '1=Aberto, 0=Fechado',
+  `hora_abertura` time DEFAULT NULL,
+  `hora_fechamento` time DEFAULT NULL,
+  `hora_pausa_inicio` time DEFAULT NULL COMMENT 'Início do horário de almoço/pausa',
+  `hora_pausa_fim` time DEFAULT NULL COMMENT 'Fim do horário de almoço/pausa'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `horarios_funcionamento`
+--
+
+INSERT INTO `horarios_funcionamento` (`id`, `dia_semana`, `nome_dia`, `aberto`, `hora_abertura`, `hora_fechamento`, `hora_pausa_inicio`, `hora_pausa_fim`) VALUES
+(1, 1, 'Segunda-feira', 1, '09:00:00', '18:00:00', '12:00:00', '13:00:00'),
+(2, 2, 'Terça-feira', 1, '09:00:00', '18:00:00', '12:00:00', '13:00:00'),
+(3, 3, 'Quarta-feira', 1, '09:00:00', '18:00:00', '12:00:00', '13:00:00'),
+(4, 4, 'Quinta-feira', 1, '09:00:00', '18:00:00', '12:00:00', '13:00:00'),
+(5, 5, 'Sexta-feira', 1, '09:00:00', '18:00:00', '12:00:00', '13:00:00'),
+(6, 6, 'Sábado', 1, '09:00:00', '17:00:00', NULL, NULL),
+(7, 7, 'Domingo', 0, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `pessoa`
 --
 
@@ -105,6 +135,7 @@ CREATE TABLE `usuario` (
   `nome` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `senha` varchar(255) NOT NULL,
+  `foto` varchar(255) DEFAULT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -127,6 +158,13 @@ ALTER TABLE `horarios`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Índices de tabela `horarios_funcionamento`
+--
+ALTER TABLE `horarios_funcionamento`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `dia_semana` (`dia_semana`);
+
+--
 -- AUTO_INCREMENT para tabelas despejadas
 --
 
@@ -135,6 +173,30 @@ ALTER TABLE `horarios`
 --
 ALTER TABLE `horarios`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT de tabela `horarios_funcionamento`
+--
+ALTER TABLE `horarios_funcionamento`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+-- --------------------------------------------------------
+
+--
+-- Configurações do Sistema Administrativo
+--
+
+-- 1. Adicionar coluna tipo_usuario na tabela usuario para sistema de permissões
+ALTER TABLE `usuario` ADD COLUMN `tipo_usuario` ENUM('cliente', 'admin') NOT NULL DEFAULT 'cliente';
+
+-- 2. Criar usuário administrador padrão (altere os dados conforme necessário)
+INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `tipo_usuario`, `ativo`) 
+VALUES (UUID(), 'Administrador', 'admin@barbearia.com', MD5('admin123'), 'admin', 1)
+ON DUPLICATE KEY UPDATE `tipo_usuario` = 'admin';
+
+-- 3. Promover usuário existente para admin (opcional - descomente e altere o email)
+-- UPDATE `usuario` SET `tipo_usuario` = 'admin' WHERE `email` = 'seu_email@gmail.com';
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
