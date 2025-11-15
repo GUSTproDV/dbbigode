@@ -1,5 +1,6 @@
 <?php
-    include '../include/header.php';
+header('Content-Type: text/html; charset=utf-8');
+include '../include/header.php';
 
     // Array associativo dos serviços
     $servicos = [

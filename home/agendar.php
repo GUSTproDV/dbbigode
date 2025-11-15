@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/html; charset=utf-8');
 session_start(); // Inicia a sessão
 if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
     $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI']; // Salva a URL atual na sessão
@@ -55,10 +56,16 @@ $corte_agendado = isset($_GET['servico']) ? $_GET['servico'] : '';
 // Gera os próximos 7 dias a partir da data atual
 setlocale(LC_TIME, 'portuguese', 'Portuguese_Brazil', 'ptb');
 $dias = [];
+$data_atual = strtotime('today');
+
 for ($i = 0; $i < 7; $i++) {
-    $data = date('Y-m-d', strtotime("+$i days"));
-    $label = strftime('%A', strtotime($data)); // Nome do dia da semana
-    $dias[] = ['label' => ucfirst($label), 'data' => $data];
+    $timestamp = strtotime("+$i days", $data_atual);
+    $data = date('Y-m-d', $timestamp);
+    $label = strftime('%A', $timestamp);
+    $dias[] = [
+        'label' => ucfirst($label), 
+        'data' => $data
+    ];
 }
 
 
@@ -93,6 +100,7 @@ foreach ($dias as &$dia) {
         'pausa_fim' => $status_dia['hora_pausa_fim'] ? formatarHorario($status_dia['hora_pausa_fim']) : null
     ];
 }
+unset($dia); // IMPORTANTE: Limpa a referência para evitar bugs no próximo foreach
 ?>
 
 <style>
@@ -122,20 +130,24 @@ foreach ($dias as &$dia) {
         flex-wrap: wrap;
         gap: 15px;
         justify-content: center;
+        max-width: 100%;
     }
     
     .dia-card {
-        flex: 1 1 calc(14.28% - 15px); /* 100% / 7 cards = 14.28% */
+        flex: 1 1 calc(14.28% - 15px);
         min-width: 180px;
-        max-width: 200px;
-    }
-
-    .dia-card {
+        max-width: 220px;
         background: #fff;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        padding: 16px;
+        padding: 15px;
+        transition: transform 0.2s, box-shadow 0.2s;
         text-align: center;
+    }
+
+    .dia-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
 
     .dia-titulo {

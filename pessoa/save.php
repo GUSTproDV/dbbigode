@@ -1,5 +1,6 @@
 <?php
-    //print_r($_POST);
+header('Content-Type: text/html; charset=utf-8');
+//print_r($_POST);
 
     include '../config/db.php';
 

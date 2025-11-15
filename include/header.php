@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/html; charset=utf-8');
 // Buscar foto do usuário logado se estiver logado
 $foto_usuario = null;
 if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
@@ -17,7 +18,7 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -1,5 +1,6 @@
 <?php
-    session_start(); // Inicia a sessão
+header('Content-Type: text/html; charset=utf-8');
+session_start(); // Inicia a sessão
 
     // Adicionando logs para depuração
     error_log('Sessão LOGADO: ' . (isset($_SESSION['LOGADO']) ? $_SESSION['LOGADO'] : 'não definida'));

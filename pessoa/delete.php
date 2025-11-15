@@ -1,5 +1,6 @@
-<?php 
-    include '../config/db.php';
+<?php
+header('Content-Type: text/html; charset=utf-8');
+include '../config/db.php';
     if(isset($_GET['id'])){
         $id = $_GET['id'];
         $sql = $conn->prepare("DELETE FROM pessoa WHERE id = ?");

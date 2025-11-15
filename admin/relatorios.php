@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: text/html; charset=utf-8');
 // Incluir conexão do banco primeiro
 include_once('../config/db.php');
 

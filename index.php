@@ -1,4 +1,5 @@
 <?php
+    header('Content-Type: text/html; charset=utf-8');
     $msg_class = '';
     $msg = '';
     if(isset($_POST['email']) || isset($_POST['senha']) ){
@@ -56,7 +57,7 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -78,6 +79,12 @@
             <label for="floatingPassword">Senha</label>
         </div>
         <input type="submit" value="Entrar" class="btn btn-lg btn-dark"/>
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #fffbe6; margin-bottom: 10px;">Ainda não tem uma conta?</p>
+            <a href="registro.php" class="btn btn-outline-light" style="width: 100%; border-color: #8d6742; color: #fffbe6;">
+                Criar Conta
+            </a>
+        </div>
     </form>
    
     <style>

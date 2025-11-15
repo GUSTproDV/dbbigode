@@ -1,5 +1,6 @@
-<?php 
-    session_start(); // Inicia a sessão
+<?php
+header('Content-Type: text/html; charset=utf-8');
+session_start(); // Inicia a sessão
     include '../config/db.php';
     include '../include/header.php'; 
 ?>

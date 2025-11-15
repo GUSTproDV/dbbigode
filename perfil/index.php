@@ -1,4 +1,5 @@
-<?php 
+<?php
+header('Content-Type: text/html; charset=utf-8');
 session_start(); // Inicia a sessão
 if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
     $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI']; // Salva a URL atual na sessão
