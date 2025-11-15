@@ -1,8 +1,28 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
 include '../include/header.php';
+include '../config/db.php';
 
-    // Array associativo dos serviços
+// Buscar serviços ativos do banco de dados
+$result = $conn->query("SELECT * FROM servicos WHERE ativo = 1 ORDER BY ordem ASC, nome ASC");
+$servicos = [];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $servicos[] = [
+            'id' => $row['id'],
+            'sigla' => strtoupper(substr($row['nome'], 0, 2)),
+            'nome' => $row['nome'],
+            'categoria' => 'Barbearia',
+            'duracao' => $row['duracao'] . ' min',
+            'preco' => 'R$ ' . number_format($row['preco'], 2, ',', '.'),
+            'preco_raw' => $row['preco'],
+            'descricao' => $row['descricao']
+        ];
+    }
+}
+
+// Se não houver serviços no banco, usar dados padrão
+if (empty($servicos)) {
     $servicos = [
         [
             'sigla' => 'CD',
@@ -19,32 +39,9 @@ include '../include/header.php';
             'duracao' => '45 min',
             'preco' => 'R$ 40,00',
             'descricao' => 'Corte tradicional feito totalmente na tesoura, para quem busca precisão.'
-        ],
-        [
-            'sigla' => 'PZ',
-            'nome' => 'Pezinho',
-            'categoria' => 'Barbearia',
-            'duracao' => '15 min',
-            'preco' => 'R$ 15,00',
-            'descricao' => 'Acabamento do cabelo e barba, deixando tudo alinhado e limpo.'
-        ],
-        [
-            'sigla' => 'BA',
-            'nome' => 'Barba',
-            'categoria' => 'Barbearia',
-            'duracao' => '30 min',
-            'preco' => 'R$ 30,00',
-            'descricao' => 'Barba feita na máquina, toalha quente e navalha para um acabamento perfeito.'
-        ],
-        [
-            'sigla' => 'CB',
-            'nome' => 'Cabelo + Barba',
-            'categoria' => 'Barbearia',
-            'duracao' => '1h',
-            'preco' => 'R$ 60,00',
-            'descricao' => 'Combo de corte de cabelo e barba com todos os cuidados.'
         ]
     ];
+}
 ?>
 
 <div class="servicos-container">

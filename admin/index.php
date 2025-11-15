@@ -150,7 +150,11 @@ if ($result_proximos) {
                     <i class="fas fa-clock"></i> Configurar Horários
                 </a>
                 
-                <a href="relatorios.php" class="admin-btn btn btn-warning">
+                <a href="servicos.php" class="admin-btn btn btn-warning">
+                    <i class="fas fa-cut"></i> Gerenciar Serviços e Preços
+                </a>
+                
+                <a href="relatorios.php" class="admin-btn btn btn-secondary">
                     <i class="fas fa-chart-bar"></i> Relatórios
                 </a>
             </div>

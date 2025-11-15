@@ -7,15 +7,57 @@ include_once('../config/db.php');
 require_once('../include/admin_middleware.php');
 verificarAdmin();
 
-// Processar exclusão de agendamento
-if ($_POST && isset($_POST['excluir_agendamento'])) {
-    $agendamento_id = $_POST['agendamento_id'];
-    $stmt = $conn->prepare("DELETE FROM horarios WHERE id = ?");
-    $stmt->bind_param("i", $agendamento_id);
-    if ($stmt->execute()) {
-        $sucesso = "Agendamento excluído com sucesso!";
-    } else {
-        $erro = "Erro ao excluir agendamento.";
+$sucesso = '';
+$erro = '';
+
+// Processar ações
+if ($_POST) {
+    // Excluir agendamento
+    if (isset($_POST['excluir_agendamento'])) {
+        $agendamento_id = $_POST['agendamento_id'];
+        $stmt = $conn->prepare("DELETE FROM horarios WHERE id = ?");
+        $stmt->bind_param("i", $agendamento_id);
+        if ($stmt->execute()) {
+            $sucesso = "Agendamento excluído com sucesso!";
+        } else {
+            $erro = "Erro ao excluir agendamento.";
+        }
+    }
+    
+    // Marcar como realizado
+    if (isset($_POST['marcar_realizado'])) {
+        $agendamento_id = $_POST['agendamento_id'];
+        $stmt = $conn->prepare("UPDATE horarios SET status = 'realizado' WHERE id = ?");
+        $stmt->bind_param("i", $agendamento_id);
+        if ($stmt->execute()) {
+            $sucesso = "Agendamento marcado como realizado!";
+        } else {
+            $erro = "Erro ao atualizar status.";
+        }
+    }
+    
+    // Marcar como pendente
+    if (isset($_POST['marcar_pendente'])) {
+        $agendamento_id = $_POST['agendamento_id'];
+        $stmt = $conn->prepare("UPDATE horarios SET status = 'pendente' WHERE id = ?");
+        $stmt->bind_param("i", $agendamento_id);
+        if ($stmt->execute()) {
+            $sucesso = "Agendamento marcado como pendente!";
+        } else {
+            $erro = "Erro ao atualizar status.";
+        }
+    }
+    
+    // Marcar como cancelado
+    if (isset($_POST['marcar_cancelado'])) {
+        $agendamento_id = $_POST['agendamento_id'];
+        $stmt = $conn->prepare("UPDATE horarios SET status = 'cancelado' WHERE id = ?");
+        $stmt->bind_param("i", $agendamento_id);
+        if ($stmt->execute()) {
+            $sucesso = "Agendamento cancelado!";
+        } else {
+            $erro = "Erro ao atualizar status.";
+        }
     }
 }
 
@@ -74,7 +116,10 @@ $result_stats = $conn->query("
         COUNT(*) as total,
         COUNT(CASE WHEN DATE(data) = CURDATE() THEN 1 END) as hoje,
         COUNT(CASE WHEN DATE(data) > CURDATE() THEN 1 END) as futuros,
-        COUNT(CASE WHEN DATE(data) < CURDATE() THEN 1 END) as passados
+        COUNT(CASE WHEN DATE(data) < CURDATE() THEN 1 END) as passados,
+        COUNT(CASE WHEN status = 'realizado' THEN 1 END) as realizados,
+        COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
+        COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados
     FROM horarios
 ");
 $stats = $result_stats->fetch_assoc();
@@ -118,6 +163,12 @@ $stats = $result_stats->fetch_assoc();
         .agendamento-row.futuro {
             background-color: #d1ecf1;
         }
+        .dropdown-item form button {
+            padding: 5px 10px;
+        }
+        .dropdown-menu {
+            min-width: 220px;
+        }
     </style>
 </head>
 <body style="background-color: #f8f9fa;">
@@ -155,28 +206,40 @@ $stats = $result_stats->fetch_assoc();
 
     <!-- Estatísticas -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="stats-card">
                 <h3 class="text-primary"><?php echo $stats['total']; ?></h3>
                 <div>Total</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="stats-card">
                 <h3 class="text-warning"><?php echo $stats['hoje']; ?></h3>
                 <div>Hoje</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="stats-card">
-                <h3 class="text-success"><?php echo $stats['futuros']; ?></h3>
+                <h3 class="text-info"><?php echo $stats['futuros']; ?></h3>
                 <div>Futuros</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="stats-card">
-                <h3 class="text-secondary"><?php echo $stats['passados']; ?></h3>
-                <div>Passados</div>
+                <h3 class="text-success"><?php echo $stats['realizados']; ?></h3>
+                <div>Realizados</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card">
+                <h3 class="text-secondary"><?php echo $stats['pendentes']; ?></h3>
+                <div>Pendentes</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="stats-card">
+                <h3 class="text-danger"><?php echo $stats['cancelados']; ?></h3>
+                <div>Cancelados</div>
             </div>
         </div>
     </div>
@@ -237,19 +300,27 @@ $stats = $result_stats->fetch_assoc();
                         <?php
                         $data_agendamento = $agendamento['data'];
                         $hoje = date('Y-m-d');
+                        $status_agendamento = $agendamento['status'] ?? 'pendente';
                         
+                        // Define classe da linha baseado na data
                         if ($data_agendamento < $hoje) {
                             $classe_row = 'passado';
-                            $status = 'Realizado';
-                            $badge_class = 'bg-secondary';
                         } elseif ($data_agendamento == $hoje) {
                             $classe_row = 'hoje';
-                            $status = 'Hoje';
-                            $badge_class = 'bg-warning';
                         } else {
                             $classe_row = 'futuro';
-                            $status = 'Agendado';
-                            $badge_class = 'bg-success';
+                        }
+                        
+                        // Define badge do status
+                        switch ($status_agendamento) {
+                            case 'realizado':
+                                $badge_status = '<span class="badge bg-success">Realizado</span>';
+                                break;
+                            case 'cancelado':
+                                $badge_status = '<span class="badge bg-danger">Cancelado</span>';
+                                break;
+                            default:
+                                $badge_status = '<span class="badge bg-warning text-dark">Pendente</span>';
                         }
                         ?>
                         <tr class="agendamento-row <?php echo $classe_row; ?>">
@@ -262,7 +333,7 @@ $stats = $result_stats->fetch_assoc();
                             <td><?php echo htmlspecialchars($agendamento['corte'] ?? 'Não especificado'); ?></td>
                             <td><?php echo date('d/m/Y', strtotime($agendamento['data'])); ?></td>
                             <td><?php echo date('H:i', strtotime($agendamento['hora'])); ?></td>
-                            <td><span class="badge <?php echo $badge_class; ?>"><?php echo $status; ?></span></td>
+                            <td><?php echo $badge_status; ?></td>
                             <td>
                                 <span class="badge <?php echo $agendamento['tipo_usuario'] === 'admin' ? 'bg-danger' : 'bg-info'; ?>">
                                     <?php echo ucfirst($agendamento['tipo_usuario'] ?? 'cliente'); ?>
@@ -270,9 +341,54 @@ $stats = $result_stats->fetch_assoc();
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm">
+                                    <!-- Botão de Status -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-cog"></i> Status
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <?php if ($status_agendamento !== 'realizado'): ?>
+                                            <li>
+                                                <form method="POST" class="dropdown-item p-0">
+                                                    <input type="hidden" name="marcar_realizado" value="1">
+                                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                    <button type="submit" class="btn btn-sm btn-link text-success text-decoration-none w-100 text-start">
+                                                        <i class="fas fa-check"></i> Marcar como Realizado
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <?php endif; ?>
+                                            <?php if ($status_agendamento !== 'pendente'): ?>
+                                            <li>
+                                                <form method="POST" class="dropdown-item p-0">
+                                                    <input type="hidden" name="marcar_pendente" value="1">
+                                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                    <button type="submit" class="btn btn-sm btn-link text-warning text-decoration-none w-100 text-start">
+                                                        <i class="fas fa-clock"></i> Marcar como Pendente
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <?php endif; ?>
+                                            <?php if ($status_agendamento !== 'cancelado'): ?>
+                                            <li>
+                                                <form method="POST" class="dropdown-item p-0">
+                                                    <input type="hidden" name="marcar_cancelado" value="1">
+                                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                    <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none w-100 text-start">
+                                                        <i class="fas fa-times"></i> Marcar como Cancelado
+                                                    </button>
+                                                </form>
+                                            </li>
+                                            <?php endif; ?>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Botão Ver Detalhes -->
                                     <button class="btn btn-outline-info" onclick="verDetalhes(<?php echo $agendamento['id']; ?>)">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    
+                                    <!-- Botão Excluir -->
                                     <?php if ($data_agendamento >= $hoje): ?>
                                     <button class="btn btn-outline-danger" onclick="confirmarExclusao(<?php echo $agendamento['id']; ?>, '<?php echo htmlspecialchars($agendamento['nome']); ?>')">
                                         <i class="fas fa-trash"></i>

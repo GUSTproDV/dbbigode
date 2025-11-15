@@ -97,7 +97,7 @@ if ($result_servicos) {
         <div class="row align-items-center">
             <div class="col-md-8">
                 <h1><i class="fas fa-chart-bar"></i> Relatórios e Estatísticas</h1>
-                <p>Análise de dados do sistema</p>
+                <p>Análise de dados e geração de relatórios PDF</p>
             </div>
             <div class="col-md-4 text-md-end">
                 <a href="index.php" class="btn btn-light">
@@ -109,6 +109,77 @@ if ($result_servicos) {
 </div>
 
 <div class="container">
+    <!-- Geração de Relatórios PDF -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-card">
+                <h5 class="mb-4"><i class="fas fa-file-pdf"></i> Gerar Relatórios em PDF</h5>
+                
+                <form id="formRelatorio" method="GET" action="gerar_relatorio.php" target="_blank">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Data Início</label>
+                            <input type="date" name="data_inicio" class="form-control" value="<?php echo date('Y-m-01'); ?>" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Data Fim</label>
+                            <input type="date" name="data_fim" class="form-control" value="<?php echo date('Y-m-t'); ?>" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Relatório</label>
+                            <select name="tipo" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="cortes_frequentes">Cortes Mais Frequentes</option>
+                                <option value="clientes_frequentes">Clientes Mais Frequentes</option>
+                                <option value="disponibilidade">Disponibilidade de Agenda</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-danger btn-lg w-100">
+                                <i class="fas fa-file-pdf"></i> Gerar Relatório PDF
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-cut fa-3x text-primary mb-3"></i>
+                                <h6>Cortes Mais Frequentes</h6>
+                                <p class="small text-muted">Ranking dos serviços mais solicitados com estatísticas de realização</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                <h6>Clientes Mais Frequentes</h6>
+                                <p class="small text-muted">Análise dos clientes mais assíduos e seus hábitos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                                <h6>Disponibilidade de Agenda</h6>
+                                <p class="small text-muted">Ocupação por dia da semana e horários mais procurados</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Resumo Geral -->
     <div class="row">
         <div class="col-md-6">
