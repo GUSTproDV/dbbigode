@@ -178,7 +178,6 @@ if ($result_proximos) {
                                     <th>Serviço</th>
                                     <th>Data</th>
                                     <th>Horário</th>
-                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -194,10 +193,6 @@ if ($result_proximos) {
                                     <td><?php echo date('d/m/Y', strtotime($agendamento['data'])); ?></td>
                                     <td><?php echo date('H:i', strtotime($agendamento['hora'])); ?></td>
                                     <td>
-                                        <a href="agendamento_detalhes.php?id=<?php echo $agendamento['id']; ?>" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            Ver Detalhes
-                                        </a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

@@ -246,37 +246,7 @@ if ($result_servicos) {
         </div>
     </div>
 
-    <!-- Ações Administrativas -->
-    <div class="row">
-        <div class="col-12">
-            <div class="stats-card">
-                <h5>Ações Rápidas</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <button class="btn btn-primary w-100" onclick="exportarRelatorio()">
-                            <i class="fas fa-download"></i><br>Exportar Relatório
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-success w-100" onclick="limparAgendamentosAntigos()">
-                            <i class="fas fa-broom"></i><br>Limpar Histórico
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-warning w-100" onclick="enviarRelatorioEmail()">
-                            <i class="fas fa-envelope"></i><br>Enviar por Email
-                        </button>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="backup.php" class="btn btn-info w-100">
-                            <i class="fas fa-database"></i><br>Backup Sistema
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <script src="https://kit.fontawesome.com/a076d05399.js"></script>
 <script>

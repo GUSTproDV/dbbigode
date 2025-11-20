@@ -383,10 +383,7 @@ $stats = $result_stats->fetch_assoc();
                                         </ul>
                                     </div>
                                     
-                                    <!-- Botão Ver Detalhes -->
-                                    <button class="btn btn-outline-info" onclick="verDetalhes(<?php echo $agendamento['id']; ?>)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                
                                     
                                     <!-- Botão Excluir -->
                                     <?php if ($data_agendamento >= $hoje): ?>

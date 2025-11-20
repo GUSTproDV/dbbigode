@@ -184,11 +184,7 @@ if ($result) {
                                         </form>
                                         <?php endif; ?>
 
-                                        <!-- Ver Detalhes -->
-                                        <button class="btn btn-sm btn-outline-primary" 
-                                                onclick="verDetalhes('<?php echo $usuario['id']; ?>')">
-                                            Detalhes
-                                        </button>
+                                        
                                     </div>
                                 </td>
                             </tr>
