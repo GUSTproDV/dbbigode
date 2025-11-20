@@ -5,7 +5,7 @@ function verificarAdmin() {
     
     // Verifica se está logado
     if (!isset($_SESSION['usuario_logado'])) {
-        header('Location: ../index.php?erro=acesso_negado');
+        header('Location: ../login.php?erro=acesso_negado');
         exit;
     }
     
@@ -22,7 +22,7 @@ function verificarAdmin() {
     
     // Verifica se é admin
     if (!$usuario || $usuario['tipo_usuario'] !== 'admin') {
-        header('Location: ../index.php?erro=acesso_negado_admin');
+        header('Location: ../login.php?erro=acesso_negado_admin');
         exit;
     }
     

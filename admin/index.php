@@ -98,7 +98,7 @@ if ($result_proximos) {
                 <p>Bem-vindo ao sistema de administração da DB Bigode</p>
             </div>
             <div class="col-md-4 text-md-end">
-                <a href="../index.php" class="btn btn-light">
+                <a href="../home/index.php" class="btn btn-light">
                     <i class="fas fa-home"></i> Voltar ao Site
                 </a>
                 <a href="../logout.php" class="btn btn-outline-light ms-2">

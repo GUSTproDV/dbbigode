@@ -64,7 +64,7 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
             </a>
             <a href="../logout.php" class="nav-link">Sair</a>
           <?php else: ?>
-            <a href="../index.php" class="nav-link">Login</a>
+            <a href="../login.php" class="nav-link">Login</a>
           <?php endif; ?>
         </li>
       </ul>

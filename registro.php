@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div style="text-align: center; margin-top: 20px;">
             <p style="color: #fffbe6; margin-bottom: 10px;">Já tem uma conta?</p>
-            <a href="index.php" class="btn btn-outline-light" style="width: 100%; border-color: #8d6742; color: #fffbe6;">
+            <a href="login.php" class="btn btn-outline-light" style="width: 100%; border-color: #8d6742; color: #fffbe6;">
                 Fazer Login
             </a>
         </div>

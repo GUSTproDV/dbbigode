@@ -4,7 +4,7 @@ session_start(); // Inicia a sessão
 if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
     $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI']; // Salva a URL atual na sessão
     $_SESSION['login_message'] = "É obrigatório realizar o login para acessar esta página.";
-    header('Location: ../index.php'); // Redireciona para a página de login
+    header('Location: ../login.php'); // Redireciona para a página de login
     exit;
 }
 

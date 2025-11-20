@@ -1,12 +1,8 @@
 <?php
     header('Content-Type: text/html; charset=utf-8');
-    
-    // Redireciona para o home como página inicial
-    session_start();
-    header('Location: ./home/index.php');
-    exit;
-?>
-
+    $msg_class = '';
+    $msg = '';
+    if(isset($_POST['email']) || isset($_POST['senha']) ){
         if($_POST['email'] == '' || $_POST['senha'] == ''){
             $msg_class = 'alert-danger';
             $msg = 'E-mail ou senha inválida';
