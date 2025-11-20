@@ -164,13 +164,47 @@ if (empty($servicos)) {
         margin-right: 2px;
         display: inline-block;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 768px) {
+        .servicos-container {
+            padding: 0 12px 24px 12px;
+            margin: 20px auto;
+        }
+        
+        .servicos-container h2 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+        
         .servicos-grid {
             grid-template-columns: 1fr;
-            gap: 18px;
+            gap: 20px;
         }
+        
+        .servico-card {
+            padding: 20px 16px;
+        }
+        
+        .servico-sigla {
+            font-size: 1rem;
+        }
+        
+        .servico-nome {
+            font-size: 1.1rem;
+        }
+        
+        .btn-reservar {
+            font-size: 0.95rem;
+            padding: 10px 0;
+        }
+    }
+    
+    @media (max-width: 480px) {
         .servicos-container h2 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+        }
+        
+        .servico-card {
+            padding: 16px 12px;
         }
     }
 </style>

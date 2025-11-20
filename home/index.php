@@ -119,17 +119,66 @@ session_start(); // Inicia a sessão
         margin: 24px auto 0 auto;
         display: block;
     }
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
+        .container-home {
+            padding: 20px 15px;
+        }
+        
         .home-bg {
-            padding: 24px 8px;
+            padding: 32px 20px;
+            max-width: 90vw;
+            margin: 0 auto;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+        }
+        
+        .agendar, .listar {
+            padding: 16px 0;
+            font-size: 1.1rem;
+        }
+        
+        .location-container {
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 10px;
+        }
+        
+        .loc {
+            max-width: 30px;
+        }
+        
+        p {
+            font-size: 0.85rem;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .instagram-logo {
+            max-width: 40px;
+            margin-top: 20px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .home-bg {
+            padding: 24px 16px;
             max-width: 95vw;
         }
+        
         h2 {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
         }
-        .instagram-logo {
-            max-width: 32px;
-            margin-top: 18px;
+        
+        .agendar, .listar {
+            padding: 14px 0;
+            font-size: 1rem;
+        }
+        
+        p {
+            font-size: 0.75rem;
         }
     }
 </style>
