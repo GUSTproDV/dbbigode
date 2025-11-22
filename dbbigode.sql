@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 15/10/2025 às 03:19
+-- Tempo de geração: 22/11/2025 às 01:35
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -24,18 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `categoria`
---
-
-CREATE TABLE `categoria` (
-  `id` int(11) NOT NULL,
-  `categoria` varchar(255) DEFAULT NULL,
-  `descricao` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Estrutura para tabela `horarios`
 --
 
@@ -44,15 +32,9 @@ CREATE TABLE `horarios` (
   `nome` text NOT NULL,
   `corte` varchar(100) DEFAULT NULL,
   `data` date NOT NULL,
-  `hora` time NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `horarios`
---
-
-INSERT INTO `horarios` (`id`, `nome`, `corte`, `data`, `hora`) VALUES
-(37, 'gustavo', 'Corte Degradê', '2025-10-15', '10:00:00');
+  `hora` time NOT NULL,
+  `status` enum('pendente','realizado','cancelado') DEFAULT 'pendente'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -87,42 +69,20 @@ INSERT INTO `horarios_funcionamento` (`id`, `dia_semana`, `nome_dia`, `aberto`, 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `pessoa`
+-- Estrutura para tabela `servicos`
 --
 
-CREATE TABLE `pessoa` (
-  `id` int(255) NOT NULL,
-  `nome` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `cpf` char(15) NOT NULL,
-  `cep` char(9) NOT NULL,
-  `endereco` varchar(255) NOT NULL,
-  `cidade` varchar(255) NOT NULL,
-  `estado` char(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `pessoa`
---
-
-INSERT INTO `pessoa` (`id`, `nome`, `email`, `cpf`, `cep`, `endereco`, `cidade`, `estado`) VALUES
-(13, 'dfsdfsdf', 'fsdfs@sdsf', '141', 'dfsfsdfs', '14', 'sdfsd', 'sdfs');
-
--- --------------------------------------------------------
-
---
--- Estrutura para tabela `produto`
---
-
-CREATE TABLE `produto` (
-  `id` int(255) NOT NULL,
-  `nome` varchar(255) NOT NULL,
-  `descricao` varchar(255) NOT NULL,
+CREATE TABLE `servicos` (
+  `id` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text DEFAULT NULL,
   `preco` decimal(10,2) NOT NULL,
-  `estoque` varchar(255) NOT NULL,
-  `status` tinyint(1) NOT NULL,
-  `codigo` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `duracao` int(11) DEFAULT 30 COMMENT 'Duração em minutos',
+  `ativo` tinyint(1) DEFAULT 1,
+  `ordem` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -136,16 +96,16 @@ CREATE TABLE `usuario` (
   `email` varchar(255) NOT NULL,
   `senha` varchar(255) NOT NULL,
   `foto` varchar(255) DEFAULT NULL,
-  `ativo` tinyint(1) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `tipo_usuario` enum('cliente','admin') NOT NULL DEFAULT 'cliente'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Despejando dados para a tabela `usuario`
 --
 
-INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `ativo`) VALUES
-('', 'gctxt', 'ocajafeegvrgbrbv@gmail.com', 'oi', 1),
-('', 'gustavo', 'lealgustavo792@gmail.com', 'ef41a5f59e8d3cd9874e4d21da2a6679', 1);
+INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `foto`, `ativo`, `tipo_usuario`) VALUES
+('6d155533-c02e-11f0-89a2-b81ea427bf68', 'Administrador', 'admin@barbearia.com', '0192023a7bbd73250516f069df18b500', NULL, 1, 'admin');
 
 --
 -- Índices para tabelas despejadas
@@ -165,6 +125,18 @@ ALTER TABLE `horarios_funcionamento`
   ADD UNIQUE KEY `dia_semana` (`dia_semana`);
 
 --
+-- Índices de tabela `servicos`
+--
+ALTER TABLE `servicos`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Índices de tabela `usuario`
+--
+ALTER TABLE `usuario`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT para tabelas despejadas
 --
 
@@ -172,7 +144,7 @@ ALTER TABLE `horarios_funcionamento`
 -- AUTO_INCREMENT de tabela `horarios`
 --
 ALTER TABLE `horarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `horarios_funcionamento`
@@ -180,23 +152,11 @@ ALTER TABLE `horarios`
 ALTER TABLE `horarios_funcionamento`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
--- --------------------------------------------------------
-
 --
--- Configurações do Sistema Administrativo
+-- AUTO_INCREMENT de tabela `servicos`
 --
-
--- 1. Adicionar coluna tipo_usuario na tabela usuario para sistema de permissões
-ALTER TABLE `usuario` ADD COLUMN `tipo_usuario` ENUM('cliente', 'admin') NOT NULL DEFAULT 'cliente';
-
--- 2. Criar usuário administrador padrão (altere os dados conforme necessário)
-INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `tipo_usuario`, `ativo`) 
-VALUES (UUID(), 'Administrador', 'admin@barbearia.com', MD5('admin123'), 'admin', 1)
-ON DUPLICATE KEY UPDATE `tipo_usuario` = 'admin';
-
--- 3. Promover usuário existente para admin (opcional - descomente e altere o email)
--- UPDATE `usuario` SET `tipo_usuario` = 'admin' WHERE `email` = 'seu_email@gmail.com';
-
+ALTER TABLE `servicos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
