@@ -9,8 +9,8 @@ session_start(); // Inicia a sessão
     <div class="home-bg">
         <h2>Bem-vindo à INVICTUS</h2>
         <div class="btn-group">
-            <a href="cortes.php" class="agendar">Agendar Horário</a>
-            <a href="listar.php" class="listar">Meus Horários</a>
+            <a href="./cortes.php" class="agendar">Agendar Horário</a>
+            <a href="./listar.php" class="listar">Meus Horários</a>
         </div>
     </div>
     <a href="https://www.instagram.com/invictusbarbeariaoficiall/" target="_blank">

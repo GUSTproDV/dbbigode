@@ -331,11 +331,28 @@ function gerarRelatorioDisponibilidade($pdf, $conn, $data_inicio, $data_fim, $da
     $pdf->SetFont('helvetica', '', 9);
     
     $total_geral = 0;
+    $tem_dados = false;
+    
     while ($row = $result->fetch_assoc()) {
-        $dia_nome = $dias_pt[$row['dia_semana']] ?? $row['dia_semana'];
-        $pdf->Cell(100, 7, utf8_decode($dia_nome), 1, 0, 'L');
+        // Traduzir o nome do dia
+        $dia_semana_raw = trim($row['dia_semana']);
+        $dia_nome = isset($dias_pt[$dia_semana_raw]) ? $dias_pt[$dia_semana_raw] : $dia_semana_raw;
+        
+        // Validar se o dia tem nome válido
+        if (empty($dia_nome) || empty($dia_semana_raw)) {
+            continue;
+        }
+        
+        $tem_dados = true;
+        $pdf->Cell(100, 7, $dia_nome, 1, 0, 'L');
         $pdf->Cell(40, 7, $row['total_agendamentos'], 1, 1, 'C');
         $total_geral += $row['total_agendamentos'];
+    }
+    
+    // Se não há dados, mostrar mensagem
+    if (!$tem_dados) {
+        $pdf->SetFont('helvetica', 'I', 9);
+        $pdf->Cell(140, 7, 'Nenhum agendamento encontrado no período', 1, 1, 'C');
     }
     
     $pdf->Ln(8);

@@ -3,7 +3,7 @@
     
     // Redireciona para o home como página inicial
     session_start();
-    header('Location: ./home/index.php');
+    header('Location: home/index.php');
     exit;
 ?>
 
