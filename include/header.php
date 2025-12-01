@@ -39,12 +39,7 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
         <li class="nav-item">
           <a href="../home" class="nav-link">Menu </a>
         </li>
-        <!-- <li class="nav-item">
-          <a href="../pessoa" class="nav-link">Pessoas</a>
-        </li> -->
-        <!-- <li class="nav-item">
-          <a href="../usuario" class="nav-link">Usuarios</a>
-        </li> -->
+
         <li class="nav-item1 d-flex align-items-center">
           <?php if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true): ?>
             <?php if (isset($_SESSION['TIPO_USUARIO']) && $_SESSION['TIPO_USUARIO'] === 'admin'): ?>

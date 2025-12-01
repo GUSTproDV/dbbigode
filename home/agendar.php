@@ -1,3 +1,5 @@
+
+
 <?php
 header('Content-Type: text/html; charset=utf-8');
 session_start(); // Inicia a sessão
@@ -58,12 +60,25 @@ setlocale(LC_TIME, 'portuguese', 'Portuguese_Brazil', 'ptb');
 $dias = [];
 $data_atual = strtotime('today');
 
+
+// Array com nomes dos dias em português
+$nomes_dias = [
+    0 => 'Domingo',
+    1 => 'Segunda-feira',
+    2 => 'Terça-feira',
+    3 => 'Quarta-feira',
+    4 => 'Quinta-feira',
+    5 => 'Sexta-feira',
+    6 => 'Sábado'
+];
+
 for ($i = 0; $i < 7; $i++) {
     $timestamp = strtotime("+$i days", $data_atual);
-    $data = date('Y-m-d', $timestamp);
-    $label = strftime('%A', $timestamp);
+    $data = date('Y-m-d', $timestamp);  
+    $dia_semana = date('w', $timestamp); // 0 (domingo) a 6 (sábado)
+    $label = $nomes_dias[$dia_semana];
     $dias[] = [
-        'label' => ucfirst($label), 
+        'label' => $label, 
         'data' => $data
     ];
 }
