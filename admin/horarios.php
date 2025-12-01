@@ -92,10 +92,23 @@ if ($_POST) {
     }
 }
 
+// Array com nomes corretos dos dias em UTF-8
+$nomes_dias_corretos = [
+    1 => 'Segunda-feira',
+    2 => 'Terça-feira',
+    3 => 'Quarta-feira',
+    4 => 'Quinta-feira',
+    5 => 'Sexta-feira',
+    6 => 'Sábado',
+    7 => 'Domingo'
+];
+
 // Buscar horários atuais
 $result = $conn->query("SELECT * FROM horarios_funcionamento ORDER BY dia_semana");
 $horarios = [];
 while ($row = $result->fetch_assoc()) {
+    // Substituir nome_dia com versão UTF-8 correta
+    $row['nome_dia'] = $nomes_dias_corretos[$row['dia_semana']];
     $horarios[$row['dia_semana']] = $row;
 }
 ?>
@@ -109,7 +122,7 @@ while ($row = $result->fetch_assoc()) {
     <link href="../assets/bootstrap.min.css" rel="stylesheet">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #17a2b8, #007bff);
+            background: linear-gradient(135deg, #121416ff, #70490aff);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;

@@ -64,7 +64,7 @@ if ($result_servicos) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #6f42c1, #495057);
+            background: linear-gradient(135deg, #121416ff, #70490aff);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;

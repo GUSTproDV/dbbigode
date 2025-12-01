@@ -43,7 +43,7 @@ if ($result_proximos) {
     <link href="../assets/bootstrap.min.css" rel="stylesheet">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, #121416ff, #70490aff);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
@@ -138,23 +138,23 @@ if ($result_proximos) {
             <div class="admin-menu">
                 <h5 class="mb-3">Menu Administrativo</h5>
                 
-                <a href="usuarios.php" class="admin-btn btn btn-primary">
+                <a href="usuarios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
                     <i class="fas fa-users"></i> Gerenciar Usuários
                 </a>
                 
-                <a href="agendamentos.php" class="admin-btn btn btn-success">
+                <a href="agendamentos.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
                     <i class="fas fa-calendar"></i> Gerenciar Agendamentos
                 </a>
                 
-                <a href="horarios.php" class="admin-btn btn btn-info">
+                <a href="horarios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
                     <i class="fas fa-clock"></i> Configurar Horários
                 </a>
                 
-                <a href="servicos.php" class="admin-btn btn btn-warning">
+                <a href="servicos.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
                     <i class="fas fa-cut"></i> Gerenciar Serviços e Preços
                 </a>
                 
-                <a href="relatorios.php" class="admin-btn btn btn-secondary">
+                <a href="relatorios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
                     <i class="fas fa-chart-bar"></i> Relatórios
                 </a>
             </div>

@@ -97,7 +97,7 @@ if ($result) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, #121416ff, #70490aff);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;
