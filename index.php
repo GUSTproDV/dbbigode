@@ -7,59 +7,6 @@
     exit;
 ?>
 
-        if($_POST['email'] == '' || $_POST['senha'] == ''){
-            $msg_class = 'alert-danger';
-            $msg = 'E-mail ou senha inválida';
-        } else {
-            include './config/db.php';
-
-            $email = $_POST['email'];
-            $senha = md5($_POST['senha']);
-
-            $sql = "SELECT * FROM usuario WHERE email = '{$email}' AND senha = '{$senha}'";
-            $result = $conn->query($sql);
-
-            if($result->num_rows == 0){
-                $msg_class = 'alert-danger';
-                $msg = 'E-mail ou Senha Inválida.';     
-            } else {
-                while($row = $result->fetch_assoc()){
-                    if($row['ativo'] == 0){
-                        $msg_class = 'alert-warning';
-                        $msg = 'Usuário bloqueado, entre em contato com o adm.';
-                    } else {
-                        $msg_class = 'alert-success';
-                        session_start();
-                        $_SESSION['LOGADO'] = TRUE;
-                        $_SESSION['NOME_USUARIO'] = $row['nome'];
-                        $_SESSION['usuario_logado'] = $row['email']; // Para verificações de admin
-                        $_SESSION['TIPO_USUARIO'] = $row['tipo_usuario'] ?? 'cliente';
-                        
-                        // Verifica se é admin e redireciona apropriadamente
-                        if (($_SESSION['TIPO_USUARIO'] ?? 'cliente') === 'admin') {
-                            $msg = 'Login administrativo efetuado com sucesso.';
-                            header('Location: ./admin/index.php');
-                            exit;
-                        } else {
-                            $msg = 'Login efetuado com sucesso.';
-                            // Redireciona para a página salva na sessão
-                            if (isset($_SESSION['redirect_after_login'])) {
-                                $redirect = $_SESSION['redirect_after_login'];
-                                unset($_SESSION['redirect_after_login']);
-                                header('Location: ' . $redirect);
-                                exit;
-                            } else {
-                                header('Location: ./home/index.php');
-                                exit;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    } 
-?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
