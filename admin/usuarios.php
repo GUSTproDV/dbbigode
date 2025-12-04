@@ -113,10 +113,8 @@ if ($result) {
         <div class="col-12">
             <div class="user-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5>Lista de Usuários (<?php echo count($usuarios); ?>)</h5>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novoUsuarioModal">
-                        <i class="fas fa-plus"></i> Novo Usuário
-                    </button>
+                    <h5>Lista de Usuários</h5>
+                    
                 </div>
 
                 <div class="table-responsive">

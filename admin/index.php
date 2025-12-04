@@ -17,12 +17,13 @@ $total_agendamentos = $result_agendamentos->fetch_assoc()['total'];
 $result_hoje = $conn->query("SELECT COUNT(*) as total FROM horarios WHERE DATE(data) = CURDATE()");
 $agendamentos_hoje = $result_hoje->fetch_assoc()['total'];
 
-// Buscar próximos agendamentos
+// Buscar próximos agendamentos (apenas pendentes)
 $result_proximos = $conn->query("
     SELECT h.*, u.nome as cliente_nome, u.email as cliente_email 
     FROM horarios h 
     LEFT JOIN usuario u ON h.nome = u.nome 
     WHERE h.data >= CURDATE() 
+    AND h.status = 'pendente'
     ORDER BY h.data ASC, h.hora ASC 
     LIMIT 10
 ");
