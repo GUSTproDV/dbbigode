@@ -396,7 +396,8 @@ unset($dia); // IMPORTANTE: Limpa a referência para evitar bugs no próximo for
                             $count = 0;
                             foreach ($dia['horarios_disponiveis'] as $h) {
                                 if ($count >= 6) {
-                                    echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$h}</button>";
+                                    $hora_formatada = date('H:i', strtotime($h));
+                                    echo "<button class='horario-btn' data-dia='{$dia['data']}' data-hora='{$h}'>{$hora_formatada}</button>";
                                 }
                                 $count++;
                             }
@@ -432,21 +433,33 @@ include '../include/footer.php';
 ?>
 
 <script>
-    document.querySelectorAll('.horario-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Remove a classe 'selected' de todos os botões
-            document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selected'));
-
-            // Adiciona a classe 'selected' ao botão clicado
-            btn.classList.add('selected');
-
-            // Define os valores nos campos ocultos
-            const data = btn.getAttribute('data-dia');
-            const hora = btn.getAttribute('data-hora');
-            document.getElementById('input-data').value = data;
-            document.getElementById('input-hora').value = hora;
+    // Função para adicionar event listener aos botões de horário
+    function setupHorarioButtons() {
+        document.querySelectorAll('.horario-btn').forEach(btn => {
+            // Remove event listeners antigos (se existirem)
+            btn.replaceWith(btn.cloneNode(true));
         });
-    });
+        
+        // Adiciona event listeners novamente
+        document.querySelectorAll('.horario-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove a classe 'selected' de todos os botões
+                document.querySelectorAll('.horario-btn').forEach(b => b.classList.remove('selected'));
+
+                // Adiciona a classe 'selected' ao botão clicado
+                btn.classList.add('selected');
+
+                // Define os valores nos campos ocultos
+                const data = btn.getAttribute('data-dia');
+                const hora = btn.getAttribute('data-hora');
+                document.getElementById('input-data').value = data;
+                document.getElementById('input-hora').value = hora;
+            });
+        });
+    }
+    
+    // Configura os botões no carregamento inicial
+    setupHorarioButtons();
 
     document.querySelectorAll('.ver-mais').forEach(btn => {
         btn.addEventListener('click', function(event) {
@@ -465,6 +478,8 @@ include '../include/footer.php';
                 } else {
                     extraHorarios.classList.add('show');
                     btn.innerText = 'VER MENOS';
+                    // Reconfigura os event listeners após mostrar novos botões
+                    setupHorarioButtons();
                 }
             }
         });

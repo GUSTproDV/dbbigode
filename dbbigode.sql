@@ -95,7 +95,6 @@ CREATE TABLE `usuario` (
   `nome` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `senha` varchar(255) NOT NULL,
-  `foto` varchar(255) DEFAULT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT 1,
   `tipo_usuario` enum('cliente','admin') NOT NULL DEFAULT 'cliente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -104,8 +103,8 @@ CREATE TABLE `usuario` (
 -- Despejando dados para a tabela `usuario`
 --
 
-INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `foto`, `ativo`, `tipo_usuario`) VALUES
-('6d155533-c02e-11f0-89a2-b81ea427bf68', 'Administrador', 'admin@barbearia.com', '0192023a7bbd73250516f069df18b500', NULL, 1, 'admin');
+INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `ativo`, `tipo_usuario`) VALUES
+('6d155533-c02e-11f0-89a2-b81ea427bf68', 'Administrador', 'admin@barbearia.com', '0192023a7bbd73250516f069df18b500', 1, 'admin');
 
 --
 -- Índices para tabelas despejadas

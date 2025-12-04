@@ -190,59 +190,19 @@ $stats = $result_stats->fetch_assoc();
 </div>
 
 <div class="container">
-    <?php if (isset($sucesso)): ?>
+    <?php if (!empty($sucesso)): ?>
         <div class="alert alert-success alert-dismissible fade show">
             <i class="fas fa-check-circle"></i> <?php echo $sucesso; ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
-    <?php if (isset($erro)): ?>
+    <?php if (!empty($erro)): ?>
         <div class="alert alert-danger alert-dismissible fade show">
             <i class="fas fa-exclamation-circle"></i> <?php echo $erro; ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
-
-    <!-- Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-primary"><?php echo $stats['total']; ?></h3>
-                <div>Total</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-warning"><?php echo $stats['hoje']; ?></h3>
-                <div>Hoje</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-info"><?php echo $stats['futuros']; ?></h3>
-                <div>Futuros</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-success"><?php echo $stats['realizados']; ?></h3>
-                <div>Realizados</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-secondary"><?php echo $stats['pendentes']; ?></h3>
-                <div>Pendentes</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="stats-card">
-                <h3 class="text-danger"><?php echo $stats['cancelados']; ?></h3>
-                <div>Cancelados</div>
-            </div>
-        </div>
-    </div>
 
     <!-- Filtros -->
     <div class="agendamentos-card mb-4">
@@ -369,19 +329,19 @@ $stats = $result_stats->fetch_assoc();
                                                 </form>
                                             </li>
                                             <?php endif; ?>
-                                            <?php if ($status_agendamento !== 'cancelado'): ?>
-                                            <li>
-                                                <form method="POST" class="dropdown-item p-0">
-                                                    <input type="hidden" name="marcar_cancelado" value="1">
-                                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none w-100 text-start">
-                                                        <i class="fas fa-times"></i> Marcar como Cancelado
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            <?php endif; ?>
                                         </ul>
                                     </div>
+                                    
+                                    <!-- Botão Cancelar (separado) -->
+                                    <?php if ($status_agendamento !== 'cancelado'): ?>
+                                    <form method="POST" style="display: inline; margin: 0;">
+                                        <input type="hidden" name="marcar_cancelado" value="1">
+                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancelar agendamento">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
                                     
                                 
                                     

@@ -32,50 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_perfil'])) 
     $nova_senha = $_POST['nova_senha'];
     $confirmar_senha = $_POST['confirmar_senha'];
     $email_original = $_POST['email_original'];
-    
-    // Processamento da foto de perfil
-    $nova_foto = null;
-    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-        $foto_tmp = $_FILES['foto']['tmp_name'];
-        $foto_nome = $_FILES['foto']['name'];
-        $foto_size = $_FILES['foto']['size'];
-        $foto_type = $_FILES['foto']['type'];
-        
-        // Validar tipo de arquivo
-        $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($foto_type, $tipos_permitidos)) {
-            $mensagem = 'Formato de imagem não permitido. Use JPEG, PNG, GIF ou WebP.';
-            $tipo_mensagem = 'danger';
-        }
-        // Validar tamanho (max 5MB)
-        elseif ($foto_size > 5 * 1024 * 1024) {
-            $mensagem = 'Imagem muito grande. Máximo 5MB.';
-            $tipo_mensagem = 'danger';
-        }
-        else {
-            // Criar pasta se não existir
-            $pasta_destino = '../uploads/perfil/';
-            if (!is_dir($pasta_destino)) {
-                mkdir($pasta_destino, 0755, true);
-            }
-            
-            // Gerar nome único para a foto (usar email como fallback se ID estiver vazio)
-            $extensao = pathinfo($foto_nome, PATHINFO_EXTENSION);
-            $id_usuario = !empty($usuario['id']) ? $usuario['id'] : md5($usuario['email']);
-            $nova_foto = 'perfil_' . $id_usuario . '_' . time() . '.' . $extensao;
-            $destino = $pasta_destino . $nova_foto;
-            
-            // Upload da foto
-            if (move_uploaded_file($foto_tmp, $destino)) {
-                $mensagem = 'Foto enviada com sucesso!';
-                $tipo_mensagem = 'success';
-            } else {
-                $mensagem = 'Erro ao fazer upload da foto. Verifique as permissões da pasta uploads.';
-                $tipo_mensagem = 'danger';
-                $nova_foto = null;
-            }
-        }
-    }
 
     // Validações
     if (empty($novo_nome) || empty($novo_email)) {
@@ -119,29 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_perfil'])) 
         }
         
         if (isset($atualizar_perfil)) {
-            // Remove foto antiga se houver uma nova
-            if ($nova_foto && !empty($usuario['foto'])) {
-                $foto_antiga = '../uploads/perfil/' . $usuario['foto'];
-                if (file_exists($foto_antiga)) {
-                    unlink($foto_antiga);
-                }
-            }
-            
             // Monta a query de atualização
-            if (!empty($nova_senha) && $nova_foto) {
-                $senha_hash = md5($nova_senha);
-                $sql_update = "UPDATE usuario SET nome = ?, email = ?, senha = ?, foto = ? WHERE email = ?";
-                $stmt_update = $conn->prepare($sql_update);
-                $stmt_update->bind_param("sssss", $novo_nome, $novo_email, $senha_hash, $nova_foto, $email_original);
-            } elseif (!empty($nova_senha)) {
+            if (!empty($nova_senha)) {
                 $senha_hash = md5($nova_senha);
                 $sql_update = "UPDATE usuario SET nome = ?, email = ?, senha = ? WHERE email = ?";
                 $stmt_update = $conn->prepare($sql_update);
                 $stmt_update->bind_param("ssss", $novo_nome, $novo_email, $senha_hash, $email_original);
-            } elseif ($nova_foto) {
-                $sql_update = "UPDATE usuario SET nome = ?, email = ?, foto = ? WHERE email = ?";
-                $stmt_update = $conn->prepare($sql_update);
-                $stmt_update->bind_param("ssss", $novo_nome, $novo_email, $nova_foto, $email_original);
             } else {
                 $sql_update = "UPDATE usuario SET nome = ?, email = ? WHERE email = ?";
                 $stmt_update = $conn->prepare($sql_update);
@@ -207,20 +146,6 @@ $result_agendamentos = $stmt_agendamentos->get_result();
                 </button>
             </div>
             
-            <!-- Foto de Perfil -->
-            <div class="foto-perfil-container">
-                <?php if (!empty($usuario['foto']) && file_exists('../uploads/perfil/' . $usuario['foto'])): ?>
-                    <img src="../uploads/perfil/<?= htmlspecialchars($usuario['foto']) ?>" alt="Foto de Perfil" class="foto-perfil">
-                <?php else: ?>
-                    <div class="foto-perfil-placeholder">
-                        <i class="user-icon">👤</i>
-                        <?php if (!empty($usuario['foto'])): ?>
-                            <small style="font-size: 10px; color: #999;">Foto não encontrada: <?= htmlspecialchars($usuario['foto']) ?></small>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-            
             <div class="info-grid" id="info-display">
                 <div class="info-item">
                     <label>Nome:</label>
@@ -239,12 +164,7 @@ $result_agendamentos = $stmt_agendamentos->get_result();
             </div>
             
             <!-- Formulário de edição (inicialmente oculto) -->
-            <form id="form-editar-perfil" class="form-editar-perfil" method="POST" enctype="multipart/form-data" style="display: none;">
-                <div class="form-group">
-                    <label for="foto">Foto de Perfil:</label>
-                    <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
-                    <small class="text-muted">Formatos aceitos: JPEG, PNG, GIF, WebP. Máximo: 5MB</small>
-                </div>
+            <form id="form-editar-perfil" class="form-editar-perfil" method="POST" style="display: none;">
                 <div class="form-group">
                     <label for="nome">Nome:</label>
                     <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($usuario['nome']) ?>" class="form-control" required>
@@ -273,36 +193,7 @@ $result_agendamentos = $stmt_agendamentos->get_result();
             </form>
         </div>
 
-        <div class="agendamentos-section">
-            <h3>Meus Agendamentos</h3>
-            <?php if ($result_agendamentos->num_rows > 0): ?>
-                <div class="agendamentos-grid">
-                    <?php while ($agendamento = $result_agendamentos->fetch_assoc()): ?>
-                        <div class="agendamento-card">
-                            <div class="agendamento-header">
-                                <h4><?= htmlspecialchars($agendamento['corte']) ?></h4>
-                                <span class="data"><?= date('d/m/Y', strtotime($agendamento['data'])) ?></span>
-                            </div>
-                            <div class="agendamento-info">
-                                <span class="hora"><?= htmlspecialchars($agendamento['hora']) ?></span>
-                            </div>
-                        </div>
-                    <?php endwhile; ?>
-                </div>
-            <?php else: ?>
-                <div class="no-agendamentos">
-                    <p>Você ainda não tem agendamentos.</p>
-                    <a href="../home/cortes.php" class="btn-agendar">Fazer Agendamento</a>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <div class="acoes-perfil">
-            <a href="../home/cortes.php" class="btn btn-primary">Novo Agendamento</a>
-            <a href="../home/listar.php" class="btn btn-secondary">Ver Todos os Agendamentos</a>
-        </div>
-    </div>
-</div>
+     
 
 <style>
     body {
@@ -369,39 +260,6 @@ $result_agendamentos = $stmt_agendamentos->get_result();
         margin-bottom: 20px;
         border-bottom: 2px solid #8d6742;
         padding-bottom: 10px;
-    }
-
-    /* Foto de Perfil */
-    .foto-perfil-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 25px;
-    }
-
-    .foto-perfil {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid #8d6742;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .foto-perfil-placeholder {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 4px solid #8d6742;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .foto-perfil-placeholder .user-icon {
-        font-size: 48px;
-        color: #8d6742;
     }
 
     .info-grid {

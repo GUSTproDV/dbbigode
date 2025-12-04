@@ -111,27 +111,7 @@ if ($result_proximos) {
 
 <div class="container">
     <div class="row">
-        <!-- Estatísticas -->
-        <div class="col-md-4">
-            <div class="stat-card text-center">
-                <div class="stat-number text-primary"><?php echo $total_usuarios; ?></div>
-                <div>Usuários Cadastrados</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card text-center">
-                <div class="stat-number text-success"><?php echo $total_agendamentos; ?></div>
-                <div>Total de Agendamentos</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-card text-center">
-                <div class="stat-number text-warning"><?php echo $agendamentos_hoje; ?></div>
-                <div>Agendamentos Hoje</div>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="row mt-4">
         <!-- Menu de Administração -->
         <div class="col-md-4">
