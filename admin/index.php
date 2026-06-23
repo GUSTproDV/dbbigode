@@ -191,6 +191,12 @@ if ($result_proximos) {
                 <a href="produtos.php" class="admin-btn">
                     <i class="fas fa-box-open"></i> Produtos e Estoque
                 </a>
+                <a href="cupons.php" class="admin-btn">
+                    <i class="fas fa-tag"></i> Cupons de Desconto
+                </a>
+                <a href="fidelidade.php" class="admin-btn">
+                    <i class="fas fa-star"></i> Programa de Fidelidade
+                </a>
                 <a href="pedidos_loja.php" class="admin-btn">
                     <i class="fas fa-shopping-bag"></i> Pedidos da Loja
                     <?php

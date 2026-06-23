@@ -17,9 +17,11 @@ if (empty($_SESSION['carrinho'])) {
 // Buscar itens e validar estoque
 $ids  = implode(',', array_map('intval', array_keys($_SESSION['carrinho'])));
 $res  = $conn->query("SELECT id, nome, preco, estoque FROM produtos WHERE id IN ($ids) AND ativo = 1");
-$itens = [];
-$total = 0.0;
-$erro  = '';
+$itens        = [];
+$total        = 0.0;
+$erro         = '';
+$cupom        = $_SESSION['cupom'] ?? null;
+$desconto_val = 0.0;
 
 while ($r = $res->fetch_assoc()) {
     $qty = (int)($_SESSION['carrinho'][$r['id']] ?? 0);
@@ -52,11 +54,30 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conflito) {
         $erro = $conflito;
     } else {
+        // Revalida e aplica cupom
+        $cupom_cod_s = '';
+        $desconto_final = 0.0;
+        if ($cupom) {
+            $c_s  = $conn->real_escape_string($cupom['codigo']);
+            $cpdb = $conn->query("SELECT * FROM cupons WHERE codigo='$c_s' AND ativo=1")->fetch_assoc();
+            if ($cpdb && !($cpdb['usos_max'] && $cpdb['usos_atual'] >= $cpdb['usos_max'])
+                      && !($cpdb['validade'] && $cpdb['validade'] < date('Y-m-d'))) {
+                $desconto_final = $cpdb['tipo'] === 'percentual'
+                    ? $total * ($cpdb['valor'] / 100)
+                    : min((float)$cpdb['valor'], $total);
+                $cupom_cod_s = $c_s;
+                // Incrementa uso
+                $conn->query("UPDATE cupons SET usos_atual = usos_atual + 1 WHERE codigo='$c_s'");
+            }
+            unset($_SESSION['cupom']);
+        }
+        $total_final = max(0, $total - $desconto_final);
+
         // Criar pedido
         $obs_s  = $conn->real_escape_string($obs);
         $nome_s = $conn->real_escape_string($nome);
         $eml_s  = $conn->real_escape_string($email);
-        $conn->query("INSERT INTO pedidos (usuario_nome, usuario_email, total, observacao) VALUES ('$nome_s','$eml_s',$total,'$obs_s')");
+        $conn->query("INSERT INTO pedidos (usuario_nome, usuario_email, total, desconto, cupom_codigo, observacao) VALUES ('$nome_s','$eml_s',$total_final,$desconto_final," . ($cupom_cod_s ? "'$cupom_cod_s'" : 'NULL') . ",'$obs_s')");
         $pedido_id = $conn->insert_id;
 
         // Salvar itens e decrementar estoque
@@ -106,9 +127,23 @@ include '../include/header.php';
             <span style="font-weight:600;color:#15803d">R$ <?= number_format($it['subtotal'],2,',','.') ?></span>
         </div>
         <?php endforeach; ?>
+        <?php
+        if ($cupom) {
+            $desconto_val = $cupom['tipo'] === 'percentual'
+                ? $total * ($cupom['valor'] / 100)
+                : min((float)$cupom['valor'], $total);
+        }
+        $total_exibir = max(0, $total - $desconto_val);
+        ?>
+        <?php if ($desconto_val > 0): ?>
+        <div class="item-row" style="color:#15803d;font-weight:600">
+            <span>🏷️ Cupom <?= htmlspecialchars($cupom['codigo']) ?></span>
+            <span>− R$ <?= number_format($desconto_val,2,',','.') ?></span>
+        </div>
+        <?php endif; ?>
         <div class="total-row">
-            <span class="fw-bold">Total</span>
-            <span class="total-val">R$ <?= number_format($total,2,',','.') ?></span>
+            <span class="fw-bold">Total<?= $desconto_val > 0 ? ' com desconto' : '' ?></span>
+            <span class="total-val">R$ <?= number_format($total_exibir,2,',','.') ?></span>
         </div>
         <p class="text-muted mt-3 mb-0" style="font-size:.85rem">
             🏪 <strong>Retirada na barbearia</strong> · Você será avisado quando o pedido estiver pronto.

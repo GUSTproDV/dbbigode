@@ -37,7 +37,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($acao === 'limpar') {
         $_SESSION['carrinho'] = [];
+        unset($_SESSION['cupom']);
         header('Location: loja.php');
+        exit;
+    }
+
+    if ($acao === 'aplicar_cupom') {
+        $codigo = strtoupper(trim($_POST['cupom'] ?? ''));
+        $c_s    = $conn->real_escape_string($codigo);
+        $cupom  = $conn->query("SELECT * FROM cupons WHERE codigo='$c_s' AND ativo=1")->fetch_assoc();
+        if (!$cupom) {
+            $_SESSION['cupom_erro'] = 'Cupom inválido ou desativado.';
+        } elseif ($cupom['usos_max'] && $cupom['usos_atual'] >= $cupom['usos_max']) {
+            $_SESSION['cupom_erro'] = 'Este cupom atingiu o limite de usos.';
+        } elseif ($cupom['validade'] && $cupom['validade'] < date('Y-m-d')) {
+            $_SESSION['cupom_erro'] = 'Este cupom está expirado.';
+        } else {
+            $_SESSION['cupom'] = $cupom;
+            unset($_SESSION['cupom_erro']);
+        }
+        header('Location: carrinho.php');
+        exit;
+    }
+
+    if ($acao === 'remover_cupom') {
+        unset($_SESSION['cupom'], $_SESSION['cupom_erro']);
+        header('Location: carrinho.php');
         exit;
     }
 }
@@ -164,6 +189,45 @@ include '../include/header.php';
                     <span class="resumo-total">R$ <?= number_format($total,2,',','.') ?></span>
                 </div>
                 <p class="text-muted mt-2 mb-0" style="font-size:.82rem">🏪 Retirada na barbearia</p>
+
+                <!-- Cupom -->
+                <?php
+                $cupom_aplicado = $_SESSION['cupom'] ?? null;
+                $desconto_val   = 0.0;
+                if ($cupom_aplicado) {
+                    $desconto_val = $cupom_aplicado['tipo'] === 'percentual'
+                        ? $total * ($cupom_aplicado['valor'] / 100)
+                        : min((float)$cupom_aplicado['valor'], $total);
+                }
+                $total_final = max(0, $total - $desconto_val);
+                ?>
+                <?php if ($cupom_aplicado): ?>
+                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:.88rem">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>🏷️ Cupom <strong><?= htmlspecialchars($cupom_aplicado['codigo']) ?></strong></span>
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="acao" value="remover_cupom">
+                            <button type="submit" class="btn btn-sm btn-link text-danger p-0" style="font-size:.8rem">remover</button>
+                        </form>
+                    </div>
+                    <div class="text-success fw-bold">− R$ <?= number_format($desconto_val,2,',','.') ?></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="fw-bold">Total com desconto</span>
+                    <span class="resumo-total">R$ <?= number_format($total_final,2,',','.') ?></span>
+                </div>
+                <?php else: ?>
+                <?php if (!empty($_SESSION['cupom_erro'])): ?>
+                <div style="color:#ef4444;font-size:.82rem;margin-top:8px"><?= htmlspecialchars($_SESSION['cupom_erro']) ?></div>
+                <?php unset($_SESSION['cupom_erro']); endif; ?>
+                <form method="POST" class="d-flex gap-2 mt-3">
+                    <input type="hidden" name="acao" value="aplicar_cupom">
+                    <input type="text" name="cupom" class="form-control form-control-sm"
+                        placeholder="Cupom de desconto" style="border-radius:8px;text-transform:uppercase">
+                    <button type="submit" class="btn btn-sm btn-outline-success" style="border-radius:8px;white-space:nowrap">Aplicar</button>
+                </form>
+                <?php endif; ?>
+
                 <a href="finalizar_pedido.php" class="btn-finalizar d-block text-center text-decoration-none mt-3">
                     Finalizar Pedido →
                 </a>

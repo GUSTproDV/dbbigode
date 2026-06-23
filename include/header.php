@@ -63,6 +63,9 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
           <li class="nav-item">
             <a href="../home/meus_pedidos.php" class="nav-link">Meus Pedidos</a>
           </li>
+          <li class="nav-item">
+            <a href="../home/fidelidade.php" class="nav-link">⭐ Fidelidade</a>
+          </li>
           <?php if (isset($_SESSION['TIPO_USUARIO']) && in_array($_SESSION['TIPO_USUARIO'], ['admin', 'funcionario'])): ?>
             <li class="nav-item">
               <a href="../admin/index.php" class="nav-link admin-link">
