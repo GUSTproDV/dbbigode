@@ -111,44 +111,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
    
     <style>
         body {
-            background: linear-gradient(120deg, #1a1a1a 60%, #8d6742 90%, #fffbe6 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #052e16 55%, #14532d 100%);
             min-height: 100vh;
             margin: 0;
-            font-family: 'Segoe UI', Arial, Helvetica, sans-serif; 
+            font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
         }
         form {
             width: 400px;
             margin: auto;
             margin-top: 5%;
-            border: 2px solid #8d6742;
+            border: 2px solid #22c55e;
             border-radius: 24px;
-            background: rgba(26,26,26,0.98);
-            box-shadow: 0 8px 32px rgba(141,103,66,0.18), 0 2px 12px rgba(255,255,255,0.08);
+            background: rgba(10, 10, 10, 0.96);
+            box-shadow: 0 8px 40px rgba(34, 197, 94, 0.18), 0 2px 12px rgba(0,0,0,0.4);
             padding: 32px;
             text-align: center;
         }
         .btn-dark {
             width: 100%;
             margin: 15px 0 0;
-            background: linear-gradient(90deg, #8d6742 60%, #fffbe6 100%);
-            color: #fffbe6;
+            background: linear-gradient(90deg, #15803d 60%, #22c55e 100%);
+            color: #ffffff;
             font-weight: bold;
             border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(34,197,94,0.2);
             transition: background 0.2s, color 0.2s, box-shadow 0.2s;
         }
         .btn-dark:hover {
-            background: linear-gradient(90deg, #fffbe6 60%, #8d6742 100%);
-            color: #1a1a1a;
-            box-shadow: 0 4px 16px rgba(141,103,66,0.18);
+            background: linear-gradient(90deg, #22c55e 0%, #15803d 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(34,197,94,0.35);
+        }
+        .btn-outline-light {
+            border-color: #22c55e !important;
+            color: #4ade80 !important;
         }
         .btn-outline-light:hover {
-            background: rgba(141,103,66,0.2);
+            background: rgba(34,197,94,0.15) !important;
         }
         h2 {
             font-size: 2rem;
-            color: #fffbe6;
-            text-shadow: 2px 2px 8px #8d6742;
+            color: #4ade80;
+            text-shadow: 0 0 18px rgba(74, 222, 128, 0.4);
             font-weight: bold;
             margin-bottom: 20px;
         }
@@ -160,14 +164,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-align: left;
         }
         .form-control {
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #8d6742;
+            background: rgba(240, 253, 244, 0.95);
+            border: 1px solid #22c55e;
+            color: #0a0a0a;
         }
         .form-control:focus {
-            background: rgba(255,255,255,1);
-            border-color: #8d6742;
-            box-shadow: 0 0 0 0.2rem rgba(141,103,66,0.25);
+            background: #ffffff;
+            border-color: #4ade80;
+            box-shadow: 0 0 0 0.2rem rgba(74,222,128,0.25);
         }
+        p { color: #d1fae5; }
     </style>
 </body>
 </html>

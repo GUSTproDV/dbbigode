@@ -5,7 +5,10 @@ include_once('../config/db.php');
 
 // Depois verificar se é admin
 require_once('../include/admin_middleware.php');
-verificarAdmin(); // Só admins podem acessar esta página
+verificarAdmin();
+
+$is_super_admin = isSuperAdmin();
+$tipo_atual     = getTipoAtual();
 
 // Buscar estatísticas
 $result_usuarios = $conn->query("SELECT COUNT(*) as total FROM usuario WHERE ativo = 1");
@@ -40,15 +43,38 @@ if ($result_proximos) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo - DB Bigode</title>
+    <title><?php echo $is_super_admin ? 'Painel Administrativo' : 'Painel do Funcionário'; ?> - DB Bigode</title>
     <link href="../assets/bootstrap.min.css" rel="stylesheet">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #121416ff, #70490aff);
-            color: white;
+            background: linear-gradient(120deg, #0a0a0a 0%, #052e16 55%, #15803d 100%);
+            color: #ffffff;
             padding: 2rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(10, 10, 10, 0.4);
         }
+        .admin-header a.btn-light,
+        .admin-header a.btn-outline-light {
+            color: #14532d;
+            border-color: rgba(34, 197, 94, 0.4);
+            background: #f0fdf4;
+        }
+        .admin-header a.btn-light:hover,
+        .admin-header a.btn-outline-light:hover {
+            background: #dcfce7;
+            border-color: #22c55e;
+        }
+        .cargo-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .cargo-super { background: rgba(255,215,0,0.18); color: #ffd700; border: 1px solid rgba(255,215,0,0.35); }
+        .cargo-func  { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
         .stat-card {
             background: white;
             border-radius: 10px;
@@ -70,16 +96,24 @@ if ($result_proximos) {
         .admin-btn {
             display: block;
             width: 100%;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 12px;
             text-decoration: none;
             text-align: left;
-            transition: all 0.3s ease;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            background: #fff;
+            color: #14532d;
+            border: 1px solid #bbf7d0;
+            box-shadow: 0 2px 10px rgba(22, 163, 74, 0.06);
         }
         .admin-btn:hover {
             transform: translateY(-2px);
+            background: linear-gradient(90deg, #14532d 0%, #15803d 100%);
+            color: #fff;
+            border-color: transparent;
             text-decoration: none;
+            box-shadow: 0 4px 16px rgba(21, 128, 61, 0.25);
         }
         .table-container {
             background: white;
@@ -95,7 +129,15 @@ if ($result_proximos) {
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1><i class="fas fa-crown"></i> Painel Administrativo</h1>
+                <?php if ($is_super_admin): ?>
+                    <h1><i class="fas fa-crown"></i> Painel Administrativo
+                        <span class="cargo-badge cargo-super">Admin Superior</span>
+                    </h1>
+                <?php else: ?>
+                    <h1><i class="fas fa-user-tie"></i> Painel do Funcionário
+                        <span class="cargo-badge cargo-func">Funcionário</span>
+                    </h1>
+                <?php endif; ?>
                 <p>Bem-vindo ao sistema de administração da DB Bigode</p>
             </div>
             <div class="col-md-4 text-md-end">
@@ -111,33 +153,56 @@ if ($result_proximos) {
 </div>
 
 <div class="container">
-    <div class="row">
-    
+    <?php if (isset($_GET['erro']) && $_GET['erro'] === 'acesso_restrito'): ?>
+        <div class="alert alert-danger alert-dismissible fade show mt-3">
+            <i class="fas fa-lock"></i> <strong>Acesso negado.</strong> Esta área é restrita ao administrador superior.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="row mt-4">
         <!-- Menu de Administração -->
         <div class="col-md-4">
             <div class="admin-menu">
-                <h5 class="mb-3">Menu Administrativo</h5>
-                
-                <a href="usuarios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
+                <h5 class="mb-3"><?php echo $is_super_admin ? 'Menu Administrativo' : 'Menu do Funcionário'; ?></h5>
+
+                <a href="usuarios.php" class="admin-btn">
                     <i class="fas fa-users"></i> Gerenciar Usuários
                 </a>
-                
-                <a href="agendamentos.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
+
+                <a href="agendamentos.php" class="admin-btn">
                     <i class="fas fa-calendar"></i> Gerenciar Agendamentos
                 </a>
-                
-                <a href="horarios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
+
+                <a href="horarios.php" class="admin-btn">
                     <i class="fas fa-clock"></i> Configurar Horários
                 </a>
-                
-                <a href="servicos.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
+
+                <?php if (!$is_super_admin): ?>
+                <a href="minha_foto.php" class="admin-btn">
+                    <i class="fas fa-camera"></i> Minha Foto de Perfil
+                </a>
+                <?php endif; ?>
+
+                <?php if ($is_super_admin): ?>
+                <a href="servicos.php" class="admin-btn">
                     <i class="fas fa-cut"></i> Gerenciar Serviços e Preços
                 </a>
-                
-                <a href="relatorios.php" class="admin-btn" style="background: linear-gradient(135deg, #121416ff, #70490aff); color: white;">
+                <a href="produtos.php" class="admin-btn">
+                    <i class="fas fa-box-open"></i> Produtos e Estoque
+                </a>
+                <a href="pedidos_loja.php" class="admin-btn">
+                    <i class="fas fa-shopping-bag"></i> Pedidos da Loja
+                    <?php
+                    $n_aguardando = $conn->query("SELECT COUNT(*) as n FROM pedidos WHERE status='aguardando'")->fetch_assoc()['n'];
+                    if ($n_aguardando > 0): ?>
+                    <span class="badge bg-warning text-dark ms-1"><?= $n_aguardando ?></span>
+                    <?php endif; ?>
+                </a>
+                <a href="relatorios.php" class="admin-btn">
                     <i class="fas fa-chart-bar"></i> Relatórios
                 </a>
+                <?php endif; ?>
             </div>
         </div>
 

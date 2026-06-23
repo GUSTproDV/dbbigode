@@ -7,43 +7,30 @@
  * Verifica se a barbearia está aberta em uma data/hora específica
  */
 function isAberto($data, $hora, $conn) {
-    // Pegar dia da semana (1=segunda, 7=domingo)
     $dia_semana = date('N', strtotime($data));
-    
-    // Buscar configuração do dia
-    $stmt = $conn->prepare("
-        SELECT * FROM horarios_funcionamento 
-        WHERE dia_semana = ? AND aberto = 1
-    ");
+
+    $stmt = $conn->prepare("SELECT * FROM horarios_funcionamento WHERE dia_semana = ? AND aberto = 1");
+    if (!$stmt) return false;
     $stmt->bind_param("i", $dia_semana);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $config = $result->fetch_assoc();
-    
-    if (!$config) {
-        return false; // Fechado neste dia
+    $config = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$config) return false;
+
+    // Normaliza hora para comparação (HH:MM:SS → timestamp de hoje)
+    $h       = strtotime(date('Y-m-d') . ' ' . $hora);
+    $abre    = strtotime(date('Y-m-d') . ' ' . $config['hora_abertura']);
+    $fecha   = strtotime(date('Y-m-d') . ' ' . $config['hora_fechamento']);
+
+    if ($h < $abre || $h >= $fecha) return false;
+
+    if (!empty($config['hora_pausa_inicio']) && !empty($config['hora_pausa_fim'])) {
+        $pi = strtotime(date('Y-m-d') . ' ' . $config['hora_pausa_inicio']);
+        $pf = strtotime(date('Y-m-d') . ' ' . $config['hora_pausa_fim']);
+        if ($h >= $pi && $h < $pf) return false;
     }
-    
-    // Verificar se está dentro do horário de funcionamento
-    $hora_check = strtotime($hora);
-    $hora_abertura = strtotime($config['hora_abertura']);
-    $hora_fechamento = strtotime($config['hora_fechamento']);
-    
-    // Verificar horário básico
-    if ($hora_check < $hora_abertura || $hora_check >= $hora_fechamento) {
-        return false;
-    }
-    
-    // Verificar se não está no horário de pausa
-    if ($config['hora_pausa_inicio'] && $config['hora_pausa_fim']) {
-        $pausa_inicio = strtotime($config['hora_pausa_inicio']);
-        $pausa_fim = strtotime($config['hora_pausa_fim']);
-        
-        if ($hora_check >= $pausa_inicio && $hora_check < $pausa_fim) {
-            return false; // Está no horário de pausa
-        }
-    }
-    
+
     return true;
 }
 
@@ -97,52 +84,110 @@ function getHorariosDisponiveis($data, $conn) {
 }
 
 /**
- * Busca agendamentos existentes para uma data
+ * Busca agendamentos existentes para uma data (opcionalmente por barbeiro)
  */
-function getAgendamentosData($data, $conn) {
-    $stmt = $conn->prepare("SELECT hora FROM horarios WHERE data = ?");
-    $stmt->bind_param("s", $data);
+function getAgendamentosData($data, $conn, $barbeiro = null) {
+    if ($barbeiro) {
+        $stmt = $conn->prepare("SELECT hora FROM horarios WHERE data = ? AND barbeiro = ?");
+        $stmt->bind_param("ss", $data, $barbeiro);
+    } else {
+        $stmt = $conn->prepare("SELECT hora FROM horarios WHERE data = ?");
+        $stmt->bind_param("s", $data);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $agendados = [];
     while ($row = $result->fetch_assoc()) {
         $agendados[] = $row['hora'];
     }
-    
+    $stmt->close();
     return $agendados;
 }
 
 /**
- * Filtra horários disponíveis removendo os já agendados
+ * Retorna o total de barbeiros ativos cadastrados
  */
-function getHorariosLivres($data, $conn) {
-    $todos_horarios = getHorariosDisponiveis($data, $conn);
-    $agendados = getAgendamentosData($data, $conn);
-    
-    // Remover horários já agendados
-    $livres = array_diff($todos_horarios, $agendados);
-    
-    return array_values($livres); // Re-indexar array
+function _totalBarbeiros($conn) {
+    $res = $conn->query("SELECT COUNT(*) as total FROM usuario WHERE tipo_usuario = 'funcionario' AND ativo = 1");
+    return $res ? (int)$res->fetch_assoc()['total'] : 0;
 }
 
 /**
- * Verifica se um horário específico está disponível
+ * Filtra horários disponíveis removendo os já agendados.
+ *
+ * - Barbeiro específico: bloqueia apenas os slots daquele barbeiro.
+ * - Sem preferência: cada barbeiro tem 1 vaga por slot.
+ *   O slot só fica indisponível quando TODOS os barbeiros estão ocupados nele.
+ *   Se não há barbeiros cadastrados, funciona como 1 vaga global por slot.
  */
-function isHorarioDisponivel($data, $hora, $conn) {
-    // Verificar se está no horário de funcionamento
+function getHorariosLivres($data, $conn, $barbeiro = null) {
+    $todos = getHorariosDisponiveis($data, $conn);
+
+    if ($barbeiro) {
+        // Isolamento por barbeiro: apenas os slots deste barbeiro são bloqueados
+        $agendados = getAgendamentosData($data, $conn, $barbeiro);
+        return array_values(array_diff($todos, $agendados));
+    }
+
+    // Sem preferência
+    $total_barb = _totalBarbeiros($conn);
+
+    if ($total_barb == 0) {
+        // Sem barbeiros: comportamento original (1 slot global por horário)
+        $agendados = getAgendamentosData($data, $conn, null);
+        return array_values(array_diff($todos, $agendados));
+    }
+
+    // Com barbeiros: slot disponível se ainda houver barbeiro livre
+    $livres = [];
+    foreach ($todos as $hora) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM horarios WHERE data = ? AND hora = ?");
+        $stmt->bind_param("ss", $data, $hora);
+        $stmt->execute();
+        $cnt = (int)$stmt->get_result()->fetch_assoc()['cnt'];
+        $stmt->close();
+        if ($cnt < $total_barb) {
+            $livres[] = $hora;
+        }
+    }
+    return $livres;
+}
+
+/**
+ * Verifica se um horário específico está disponível para agendamento.
+ *
+ * - Barbeiro específico: slot livre se este barbeiro não tiver agendamento nele.
+ * - Sem preferência: slot válido se ao menos 1 barbeiro estiver livre.
+ */
+function isHorarioDisponivel($data, $hora, $conn, $barbeiro = null) {
     if (!isAberto($data, $hora, $conn)) {
         return false;
     }
-    
-    // Verificar se já está agendado
-    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM horarios WHERE data = ? AND hora = ?");
+
+    if ($barbeiro) {
+        // Verifica apenas se ESTE barbeiro já tem agendamento no horário
+        $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM horarios WHERE data = ? AND hora = ? AND barbeiro = ?");
+        $stmt->bind_param("sss", $data, $hora, $barbeiro);
+        $stmt->execute();
+        $cnt = (int)$stmt->get_result()->fetch_assoc()['cnt'];
+        $stmt->close();
+        return $cnt === 0;
+    }
+
+    // Sem preferência
+    $total_barb = _totalBarbeiros($conn);
+
+    $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM horarios WHERE data = ? AND hora = ?");
     $stmt->bind_param("ss", $data, $hora);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    
-    return $row['count'] == 0;
+    $cnt = (int)$stmt->get_result()->fetch_assoc()['cnt'];
+    $stmt->close();
+
+    if ($total_barb == 0) {
+        return $cnt === 0; // 1 slot global
+    }
+    return $cnt < $total_barb; // ao menos 1 barbeiro livre
 }
 
 /**

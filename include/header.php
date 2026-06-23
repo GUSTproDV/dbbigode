@@ -39,13 +39,38 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
         <li class="nav-item">
           <a href="../home" class="nav-link">Menu</a>
         </li>
+        <li class="nav-item">
+          <a href="../home/barbeiros.php" class="nav-link">Barbeiros</a>
+        </li>
+        <li class="nav-item">
+          <a href="../home/cortes.php" class="nav-link">Serviços</a>
+        </li>
+        <li class="nav-item">
+          <a href="../home/loja.php" class="nav-link">🛍️ Loja</a>
+        </li>
       </ul>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <?php if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true): ?>
-          <?php if (isset($_SESSION['TIPO_USUARIO']) && $_SESSION['TIPO_USUARIO'] === 'admin'): ?>
+        <?php if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true):
+            $carrinho_total = array_sum($_SESSION['carrinho'] ?? []);
+        ?>
+          <?php if ($carrinho_total > 0): ?>
+          <li class="nav-item">
+            <a href="../home/carrinho.php" class="nav-link position-relative" style="font-weight:600;color:#15803d!important">
+              🛒 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size:.65rem"><?= $carrinho_total ?></span>
+            </a>
+          </li>
+          <?php endif; ?>
+          <li class="nav-item">
+            <a href="../home/meus_pedidos.php" class="nav-link">Meus Pedidos</a>
+          </li>
+          <?php if (isset($_SESSION['TIPO_USUARIO']) && in_array($_SESSION['TIPO_USUARIO'], ['admin', 'funcionario'])): ?>
             <li class="nav-item">
               <a href="../admin/index.php" class="nav-link admin-link">
-                <span class="admin-badge">👑 Admin</span>
+                <?php if ($_SESSION['TIPO_USUARIO'] === 'admin'): ?>
+                  <span class="admin-badge">👑 Admin</span>
+                <?php else: ?>
+                  <span class="admin-badge">🔧 Painel</span>
+                <?php endif; ?>
               </a>
             </li>
           <?php endif; ?>
@@ -76,81 +101,84 @@ if (isset($_SESSION['LOGADO']) && $_SESSION['LOGADO'] === true) {
 
 <style>
   .navbar {
-    background-color: #222 !important;
+    background: linear-gradient(120deg, #ffffff 40%, #14532d 100%) !important;
+    border-bottom: 2px solid #22c55e;
+    box-shadow: 0 2px 12px rgba(22, 163, 74, 0.12);
   }
   .navbar .navbar-brand,
   .navbar .nav-link {
-    color: #fff !important;
-  }
-  
-  .navbar-toggler {
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-  
-  .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-  }
-  
-  .nav-link:hover {
-    color: #d54f4f !important;
-  }
-  
-  .welcome-link {
-    color: #ffd700 !important; /* Cor dourada para destacar */
+    color: #14532d !important;
     font-weight: 500;
+  }
+
+  .navbar-toggler {
+    border-color: rgba(21, 128, 61, 0.5);
+  }
+
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(21, 128, 61, 0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+
+  .nav-link:hover {
+    color: #16a34a !important;
+  }
+
+  .welcome-link {
+    color: #15803d !important;
+    font-weight: 600;
     transition: color 0.3s ease;
   }
-  
+
   .welcome-link:hover {
-    color: #ffed4e !important; /* Cor mais clara no hover */
+    color: #14532d !important;
     text-decoration: none;
   }
-  
+
   /* Foto de perfil no header */
   .foto-perfil-header {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #ffd700;
+    border: 2px solid #22c55e;
     flex-shrink: 0;
   }
-  
+
   .foto-perfil-header-placeholder {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #555;
+    background: #dcfce7;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #ffd700;
+    border: 2px solid #22c55e;
     flex-shrink: 0;
   }
-  
+
   .user-icon-small {
     font-size: 16px;
-    color: #ffd700;
+    color: #15803d;
   }
-  
+
   /* Botão Admin */
   .admin-link {
-    color: #ff6b6b !important;
-    background: rgba(255, 107, 107, 0.1);
+    color: #14532d !important;
+    background: rgba(34, 197, 94, 0.15);
     border-radius: 15px;
     padding: 5px 10px !important;
-    border: 1px solid rgba(255, 107, 107, 0.3);
+    border: 1px solid rgba(34, 197, 94, 0.4);
     transition: all 0.3s ease;
     display: inline-flex !important;
     align-items: center;
   }
-  
+
   .admin-link:hover {
-    background: rgba(255, 107, 107, 0.2) !important;
-    color: #ff5252 !important;
+    background: rgba(34, 197, 94, 0.3) !important;
+    color: #052e16 !important;
     transform: scale(1.05);
   }
-  
+
   .admin-badge {
     font-size: 12px;
     font-weight: bold;

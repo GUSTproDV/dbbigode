@@ -42,7 +42,7 @@ if ($result->num_rows === 0) {
 $user = $result->fetch_assoc();
 if (($user['tipo_usuario'] ?? 'cliente') !== 'admin') {
     ob_end_clean();
-    die('Acesso negado. Apenas administradores podem gerar relatórios.');
+    die('Acesso negado. Apenas o administrador superior pode gerar relatórios.');
 }
 
 // Receber parâmetros

@@ -1,51 +1,75 @@
 <?php
-// Middleware para verificar se o usuário é administrador
+function _iniciarSessao() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+// Permite acesso a admin E funcionario; redireciona clientes
 function verificarAdmin() {
-    session_start();
-    
-    // Verifica se está logado
+    _iniciarSessao();
+
     if (!isset($_SESSION['usuario_logado'])) {
         header('Location: ../login.php?erro=acesso_negado');
         exit;
     }
-    
-    // Usar conexão global do banco (já incluída)
+
     global $conn;
-    
     $email = $_SESSION['usuario_logado'];
-    $sql = "SELECT tipo_usuario FROM usuario WHERE email = ? AND ativo = 1";
-    $stmt = $conn->prepare($sql);
+    $stmt  = $conn->prepare("SELECT tipo_usuario FROM usuario WHERE email = ? AND ativo = 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $usuario = $result->fetch_assoc();
-    
-    // Verifica se é admin
-    if (!$usuario || $usuario['tipo_usuario'] !== 'admin') {
+    $usuario = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$usuario || !in_array($usuario['tipo_usuario'], ['admin', 'funcionario'])) {
         header('Location: ../login.php?erro=acesso_negado_admin');
         exit;
     }
-    
+
     return true;
 }
 
-// Função para verificar se o usuário logado é admin (sem redirecionamento)
-function isAdmin() {
+// Permite acesso APENAS ao admin superior
+function verificarSuperAdmin() {
+    _iniciarSessao();
+
     if (!isset($_SESSION['usuario_logado'])) {
-        return false;
+        header('Location: ../login.php?erro=acesso_negado');
+        exit;
     }
-    
-    // Usar conexão global do banco (já incluída)
+
     global $conn;
-    
     $email = $_SESSION['usuario_logado'];
-    $sql = "SELECT tipo_usuario FROM usuario WHERE email = ? AND ativo = 1";
-    $stmt = $conn->prepare($sql);
+    $stmt  = $conn->prepare("SELECT tipo_usuario FROM usuario WHERE email = ? AND ativo = 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $usuario = $result->fetch_assoc();
-    
-    return $usuario && $usuario['tipo_usuario'] === 'admin';
+    $usuario = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$usuario || $usuario['tipo_usuario'] !== 'admin') {
+        header('Location: ./index.php?erro=acesso_restrito');
+        exit;
+    }
+
+    return true;
+}
+
+// true se o usuário logado for admin superior
+function isSuperAdmin() {
+    _iniciarSessao();
+    return isset($_SESSION['TIPO_USUARIO']) && $_SESSION['TIPO_USUARIO'] === 'admin';
+}
+
+// true se o usuário logado for admin ou funcionario
+function isAdmin() {
+    _iniciarSessao();
+    return isset($_SESSION['TIPO_USUARIO']) && in_array($_SESSION['TIPO_USUARIO'], ['admin', 'funcionario']);
+}
+
+// Retorna o tipo do usuário logado
+function getTipoAtual() {
+    _iniciarSessao();
+    return $_SESSION['TIPO_USUARIO'] ?? null;
 }
 ?>

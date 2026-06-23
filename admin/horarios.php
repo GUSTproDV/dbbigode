@@ -122,10 +122,11 @@ while ($row = $result->fetch_assoc()) {
     <link href="../assets/bootstrap.min.css" rel="stylesheet">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #121416ff, #70490aff);
+            background: linear-gradient(135deg, #0a0a0a 0%, #052e16 55%, #15803d 100%);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(10, 10, 10, 0.4);
         }
         .horarios-card {
             background: white;

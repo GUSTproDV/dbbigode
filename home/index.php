@@ -26,7 +26,7 @@ session_start(); // Inicia a sessão
 
 <style>
     body {
-        background: linear-gradient(120deg, #1a1a1a 60%, #8d6742 90%, #fffbe6 100%);
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
         min-height: 100vh;
         margin: 0;
         font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
@@ -66,26 +66,26 @@ session_start(); // Inicia a sessão
     }
 
     p {
-        color: white;
+        color: #14532d;
         margin: 0;
     }
 
     .home-bg {
-        background: rgba(26,26,26,0.98);
+        background: #ffffff;
         border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(141,103,66,0.18), 0 2px 12px rgba(255,255,255,0.08);
+        box-shadow: 0 8px 40px rgba(22, 163, 74, 0.18), 0 2px 12px rgba(0,0,0,0.06);
         padding: 48px 32px;
         max-width: 400px;
         width: 100%;
         text-align: center;
         position: relative;
-        border: 2px solid #8d6742;
+        border: 2px solid #22c55e;
     }
     h2 {
         margin-bottom: 30px;
         font-size: 2.2rem;
-        color: #fffbe6;
-        text-shadow: 2px 2px 8px #8d6742;
+        color: #14532d;
+        text-shadow: none;
         font-weight: 700;
     }
     .btn-group {
@@ -100,19 +100,20 @@ session_start(); // Inicia a sessão
         border: none;
         padding: 18px 0;
         font-size: 1.2rem;
-        color: #fffbe6;
-        background: linear-gradient(90deg, #8d6742 60%, #fffbe6 100%);
+        color: #ffffff;
+        background: linear-gradient(90deg, #15803d 60%, #22c55e 100%);
         border-radius: 10px;
         text-decoration: none;
         font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 10px rgba(21, 128, 61, 0.25);
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
         letter-spacing: 1px;
     }
     .agendar:hover, .listar:hover {
-        background: linear-gradient(90deg, #fffbe6 60%, #8d6742 100%);
-        color: #1a1a1a;
-        box-shadow: 0 4px 16px rgba(141,103,66,0.18);
+        background: linear-gradient(90deg, #14532d 60%, #15803d 100%);
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(21, 128, 61, 0.35);
+        transform: translateY(-2px);
     }
     .instagram-logo {
         max-width: 48px;

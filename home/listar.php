@@ -2,10 +2,6 @@
 header('Content-Type: text/html; charset=utf-8');
 session_start(); // Inicia a sessão
 
-    // Adicionando logs para depuração
-    error_log('Sessão LOGADO: ' . (isset($_SESSION['LOGADO']) ? $_SESSION['LOGADO'] : 'não definida'));
-    error_log('Redirecionando para login se necessário.');
-
     if (!isset($_SESSION['LOGADO']) || $_SESSION['LOGADO'] !== true) {
         $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI']; // Salva a URL atual na sessão
         $_SESSION['login_message'] = "É obrigatório realizar o login para acessar esta página.";
@@ -43,7 +39,7 @@ session_start(); // Inicia a sessão
     }
 
     .meus-horarios-header h2 {
-        color: #8d6742;
+        color: #14532d;
         font-weight: bold;
         font-size: 2rem;
         margin-bottom: 10px;
@@ -64,10 +60,10 @@ session_start(); // Inicia a sessão
     .horario-card {
         background: #fff;
         border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
         padding: 20px;
         transition: transform 0.3s, box-shadow 0.3s;
-        border-left: 5px solid #8d6742;
+        border-left: 5px solid #22c55e;
     }
 
     .horario-card:hover {
@@ -120,7 +116,7 @@ session_start(); // Inicia a sessão
 
     .info-row i {
         width: 25px;
-        color: #8d6742;
+        color: #15803d;
         font-size: 1.1rem;
     }
 
@@ -182,18 +178,19 @@ session_start(); // Inicia a sessão
 
     .btn-agendar {
         display: inline-block;
-        background: #8d6742;
+        background: linear-gradient(90deg, #15803d 60%, #22c55e 100%);
         color: #fff;
         padding: 12px 30px;
         border-radius: 8px;
         text-decoration: none;
         font-weight: bold;
-        transition: background 0.3s;
+        transition: background 0.3s, transform 0.15s;
     }
 
     .btn-agendar:hover {
-        background: #6b4f2e;
+        background: linear-gradient(90deg, #14532d 60%, #15803d 100%);
         color: #fff;
+        transform: translateY(-2px);
     }
 
     @media (max-width: 768px) {
@@ -212,7 +209,7 @@ session_start(); // Inicia a sessão
     <div class="horarios-grid">
         <?php
             $nomeUsuario = $_SESSION['NOME_USUARIO'];
-            $sql = "SELECT id, nome, corte, data, hora, status FROM horarios WHERE nome = ? ORDER BY data DESC, hora DESC";
+            $sql = "SELECT id, nome, corte, barbeiro, data, hora, status FROM horarios WHERE nome = ? ORDER BY data DESC, hora DESC";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("s", $nomeUsuario);
             $stmt->execute();
@@ -242,6 +239,13 @@ session_start(); // Inicia a sessão
                     echo "      <span class='info-label'>Corte:</span>";
                     echo "      <span class='info-value'>" . htmlspecialchars($row['corte']) . "</span>";
                     echo "    </div>";
+                    if (!empty($row['barbeiro'])) {
+                        echo "    <div class='info-row'>";
+                        echo "      <i class='fas fa-user'></i>";
+                        echo "      <span class='info-label'>Barbeiro:</span>";
+                        echo "      <span class='info-value'>" . htmlspecialchars($row['barbeiro']) . "</span>";
+                        echo "    </div>";
+                    }
                     echo "    <div class='info-row'>";
                     echo "      <i class='fas fa-calendar'></i>";
                     echo "      <span class='info-label'>Data:</span>";

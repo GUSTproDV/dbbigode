@@ -1,4 +1,5 @@
 <?php
+session_start();
 header('Content-Type: text/html; charset=utf-8');
 include '../include/header.php';
 include '../config/db.php';
@@ -74,7 +75,7 @@ if (empty($servicos)) {
     }
     .servicos-container h2 {
         font-size: 2.2rem;
-        color: #8d6742;
+        color: #14532d;
         font-weight: 700;
         margin-bottom: 32px;
         text-align: left;
@@ -102,7 +103,7 @@ if (empty($servicos)) {
     .servico-sigla {
         width: 54px;
         height: 54px;
-        background: linear-gradient(135deg, #8d6742 60%, #fffbe6 100%);
+        background: linear-gradient(135deg, #14532d 60%, #22c55e 100%);
         color: #fff;
         font-size: 1.4rem;
         font-weight: bold;
@@ -111,7 +112,7 @@ if (empty($servicos)) {
         align-items: center;
         justify-content: center;
         margin-bottom: 18px;
-        box-shadow: 0 2px 8px rgba(141,103,66,0.10);
+        box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
         letter-spacing: 2px;
     }
     .servico-info {
@@ -128,7 +129,7 @@ if (empty($servicos)) {
     .servico-duracao,
     .servico-preco {
         font-size: 0.98rem;
-        color: #8d6742;
+        color: #15803d;
         margin-bottom: 2px;
     }
     .servico-descricao {

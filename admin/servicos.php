@@ -3,9 +3,9 @@ header('Content-Type: text/html; charset=utf-8');
 // Incluir conexão do banco primeiro
 include_once('../config/db.php');
 
-// Depois verificar se é admin
+// Apenas admin superior pode gerenciar serviços
 require_once('../include/admin_middleware.php');
-verificarAdmin();
+verificarSuperAdmin();
 
 $msg = '';
 $msg_class = '';
@@ -97,10 +97,11 @@ if ($result) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #121416ff, #70490aff);
+            background: linear-gradient(135deg, #0a0a0a 0%, #052e16 55%, #15803d 100%);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(10, 10, 10, 0.4);
         }
         .servico-card {
             background: white;

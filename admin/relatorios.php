@@ -3,9 +3,9 @@ header('Content-Type: text/html; charset=utf-8');
 // Incluir conexão do banco primeiro
 include_once('../config/db.php');
 
-// Depois verificar se é admin
+// Apenas admin superior pode acessar relatórios
 require_once('../include/admin_middleware.php');
-verificarAdmin();
+verificarSuperAdmin();
 
 // Buscar dados para relatórios
 $result_usuarios_mes = $conn->query("
@@ -64,10 +64,11 @@ if ($result_servicos) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .admin-header {
-            background: linear-gradient(135deg, #121416ff, #70490aff);
+            background: linear-gradient(135deg, #0a0a0a 0%, #052e16 55%, #15803d 100%);
             color: white;
             padding: 1.5rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 16px rgba(10, 10, 10, 0.4);
         }
         .chart-card, .stats-card {
             background: white;
